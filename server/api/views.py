@@ -1,8 +1,10 @@
 from flask import Blueprint, jsonify, request
-from . import db
+from . import db, app
 from .models import Movie
 
-main = Blueprint('main',__name__)
+main = Blueprint('main', __name__)
+app.register_blueprint(main)
+
 
 @main.route('/add_movie', methods=['POST'])
 def add_movie():
@@ -17,6 +19,7 @@ def add_movie():
     db.session.commit()
 
     return 'Done', 201
+
 
 @main.route('/movies')
 def movies():

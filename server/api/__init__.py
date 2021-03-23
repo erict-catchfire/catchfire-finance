@@ -1,19 +1,10 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 
-def create_app():
-    app = Flask(__name__)
-
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres+psycopg2://postgres:postgres@localhost:5432/catchfire'
-
-    db.init_app(app)
-
-    from .views import main
-    app.register_blueprint(main)
-
-    return app
-
-
-app = create_app()
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:catchfireprodpassword@localhost:5432/catchfire'
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
