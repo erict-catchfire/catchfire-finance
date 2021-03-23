@@ -1,8 +1,8 @@
-from . import db
-
 from sqlalchemy import text
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
+
+from server.api import db
 
 
 class Movie(db.Model):
