@@ -1,14 +1,9 @@
-from cff import db
-
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 
-
-class Movie(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(50))
-    rating = db.Column(db.Integer)
+db = SQLAlchemy()
 
 
 class Base(db.Model):
