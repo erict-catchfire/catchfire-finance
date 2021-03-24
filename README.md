@@ -18,6 +18,11 @@ Catchfire Finance Project Repository
    ```
    pipenv shell
    ```
+   
+3. Download python dependencies
+   ```
+   pipenv install
+   ```
 
 3. Export Enviromental Variables
    ```
