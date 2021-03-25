@@ -7,8 +7,11 @@ import { Header } from "./components/Header"
 import { Footer } from "./components/Footer"
 import { VizGrid } from "./components/VizGrid"
 
-const headerHeight = 100;
 const footerHeight = 200;
+const logoHeight = 50;
+const logoWidth = 270;
+
+
 
 function App() {
   //const [movies, setMovies] = useState([]);
@@ -26,15 +29,12 @@ function App() {
   return (
     <div className="App">
       <Header className="Header" 
-        headerHeight = {headerHeight}
-        innerWidth   = {innerWidth}
-        innerHeight  = {innerHeight}
+          logoWidth  = {logoWidth}
+          logoHeight = {logoHeight}
       /> 
 
       <div className="GridContainer">
-        <div className="Header-Shell"> 
-          <svg width={innerWidth} height={headerHeight}/>
-        </div>
+        <div className="Header-Shell"> </div>
 
         <div className="Left"> Left </div>
 
