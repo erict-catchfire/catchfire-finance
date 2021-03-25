@@ -5,18 +5,24 @@ import { Searchbar } from './Searchbar'
 const options = [
    {
       key: "AMAZ",
-      text: "Amazon Corp. (AMZN)",
-      value: "AMAZ"
+      content: "Amazon Corp.",
+      text: "AMZN",
+      value: "AMAZ",
+      label: "AMAZ"
    },
    {
       key: "GOOG",
-      text: "Google Corp. (GOOG)",
-      value: "GOOG"
+      content: "Google Corp.",
+      text: "GOOG",
+      value: "GOOG",
+      label: "GOOG"
    },
    {
       key: "GME",
-      text: "Gamestop Corp. (GME)",
-      value: "GME"
+      content: "Gamestop Corp.",
+      text: "GME",
+      value: "GME",
+      label: "GME"
    }
 ]
 
