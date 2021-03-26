@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from sqlalchemy.orm import relationship
@@ -11,6 +13,16 @@ class Base(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, server_default=text("(now() at time zone 'utc')"))
+    updated_at = db.Column(db.DateTime, server_default=text("(now() at time zone 'utc')"))
+
+    def save(self, session=None):
+        self.updated_at = datetime.now()
+        if not session:
+            session = db.session
+
+        session.add(self)
+
+        return self
 
 
 class User(Base):

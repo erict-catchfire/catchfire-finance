@@ -9,6 +9,7 @@ Flask-SQLAlchemy = "*"
 Flask-Migrate = "*"
 Flask-Script = "*"
 py-healthcheck = "*"
+click = "*"
 
 [dev-packages]
 
