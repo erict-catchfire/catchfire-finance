@@ -11,43 +11,51 @@ class Base(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, server_default=text("(now() at time zone 'utc')"))
+    updated_at = db.Column(db.DateTime, server_default=text("(now() at time zone 'utc')"))
 
 
-class User(Base):
+class Account(Base):
     handle = db.Column(db.String)
-    site = db.Column(db.Integer, db.ForeignKey('site.id'))
+    site_id = db.Column(db.Integer, db.ForeignKey('site.id'))
+    site = relationship('Site', foreign_keys=[site_id])
 
 
 class Document(Base):
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    account_id = db.Column(db.Integer, db.ForeignKey('account.id'), nullable=False)
+    account = relationship('Account', foreign_keys=[account_id])
     contents = db.Column(db.String)
-    user_mentions = relationship('UserMention', uselist=True)
+    account_mentions = relationship('AccountMention', uselist=True)
     ticker_mentions = relationship('TickerMention', uselist=True)
     posted_at = db.Column(db.DateTime)
-    sentiment_id = db.Column(db.Integer, db.ForeignKey('document_sentiment.id'))
+    sentiments = relationship('DocumentSentiment', uselist=True)
+    site_id = db.Column(db.Integer, db.ForeignKey('site.id'), index=True)
     site_resource = db.Column(db.String)
 
 
-class UserMention(Base):
-    document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+class AccountMention(Base):
+    document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False, index=True)
+    account_id = db.Column(db.Integer, db.ForeignKey('account.id'), nullable=False)
+    account = relationship('Account', foreign_keys=[account_id])
 
 
 class TickerMention(Base):
-    document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('ticker.id'), nullable=False)
+    document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False, index=True)
+    ticker_id = db.Column(db.Integer, db.ForeignKey('ticker.id'), nullable=False)
+    ticker = relationship('Ticker', foreign_keys=[ticker_id])
 
 
 class Ticker(Base):
-    short_code = db.Column(db.String)
+    short_code = db.Column(db.String, unique=True)
     name = db.Column(db.String)
+    classification = db.Column(JSONB)
 
 
 class Site(Base):
-    name = db.Column(db.String)
-    url_domain = db.Column(db.String)
+    name = db.Column(db.String, nullable=False, unique=True)
+    url_domain = db.Column(db.String, nullable=False)
 
 
 class DocumentSentiment(Base):
-    sentiment = db.Column(JSONB)
+    sentiment = db.Column(JSONB, default={})
     model_version = db.Column(db.String, nullable=True)
+    document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False)
