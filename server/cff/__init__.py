@@ -12,10 +12,10 @@ app.config.from_pyfile('config.py')
 db.init_app(app)
 
 from cff.cli.site import site_cli
-from cff.cli.acquire import acquire_cli
+from cff.cli.defaults import defaults_cli
 
 app.cli.add_command(site_cli)
-app.cli.add_command(acquire_cli)
+app.cli.add_command(defaults_cli)
 
 health = HealthCheck()
 app.add_url_rule("/healthcheck", "healthcheck", view_func=lambda: health.run())

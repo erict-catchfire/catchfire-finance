@@ -4,10 +4,10 @@ from flask.cli import AppGroup
 from cff import db
 from cff.models import Site
 
-acquire_cli = AppGroup('acquire')
+defaults_cli = AppGroup('defaults')
 
 
-@acquire_cli.command('create')
+@defaults_cli.command('sites')
 def default_sites():
     for site in default_site_map:
         new_site = Site(
