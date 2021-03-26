@@ -25,17 +25,17 @@ class Base(db.Model):
         return self
 
 
-class User(Base):
+class Account(Base):
     handle = db.Column(db.String)
     site_id = db.Column(db.Integer, db.ForeignKey('site.id'))
     site = relationship('Site', foreign_keys=[site_id])
 
 
 class Document(Base):
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = relationship('User', foreign_keys=[user_id])
+    account_id = db.Column(db.Integer, db.ForeignKey('account.id'), nullable=False)
+    account = relationship('Account', foreign_keys=[account_id])
     contents = db.Column(db.String)
-    user_mentions = relationship('UserMention', uselist=True)
+    account_mentions = relationship('AccountMention', uselist=True)
     ticker_mentions = relationship('TickerMention', uselist=True)
     posted_at = db.Column(db.DateTime)
     sentiments = relationship('DocumentSentiment', uselist=True)
@@ -43,10 +43,10 @@ class Document(Base):
     site_resource = db.Column(db.String)
 
 
-class UserMention(Base):
+class AccountMention(Base):
     document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False, index=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = relationship('User', foreign_keys=[user_id])
+    account_id = db.Column(db.Integer, db.ForeignKey('account.id'), nullable=False)
+    account = relationship('Account', foreign_keys=[account_id])
 
 
 class TickerMention(Base):
