@@ -11,6 +11,7 @@ class Base(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, server_default=text("(now() at time zone 'utc')"))
+    updated_at = db.Column(db.DateTime, server_default=text("(now() at time zone 'utc')"))
 
 
 class Account(Base):
