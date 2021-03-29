@@ -4,10 +4,17 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import 'semantic-ui-css/semantic.min.css';
+import { createStore} from 'redux';
+import allReducers from './reducers/index';
+import { Provider } from 'react-redux';
+
+const store = createStore(allReducers);
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <Provider store={store}>
+       <App />
+    </Provider>
   </React.StrictMode>,
   document.getElementById('root')
 );
