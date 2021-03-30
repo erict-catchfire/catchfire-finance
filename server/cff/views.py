@@ -11,8 +11,13 @@ def test():
 @main.route('/getPrice', methods=['POST'])
 def getPrice():
     request_object = request.get_json()
-    Dict = {}
-    for tick in request_object['tickers'] :
-        Dict[tick] = yf.Ticker(tick).history(period='1d')['Close'][0]
+    ticker_dict = {}
 
-    return jsonify(Dict)
+    requested_tickers = request_object['tickers']
+    if not requested_tickers:
+        return "Include valid tickers for request", 400
+
+    for tick in requested_tickers:
+        ticker_dict[tick] = yf.Ticker(tick).history(period='1d')['Close'][0]
+
+    return jsonify(ticker_dict)
