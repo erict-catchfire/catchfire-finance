@@ -13,14 +13,14 @@ const GetPriceData = tickers => {
         fetch("/getPrice", {
             method : "POST",
             headers : {
-                        "Content-Type" : "application/json"
+                "Content-Type" : "application/json"
             },
             body: JSON.stringify(request)
-            }).then( response => response.json().then(data => {
-                        setData(data)
-                    }
-                )
-            )
+        }).then(response => {
+            response.json().then(data => {
+                setData(data)
+            });
+        });
     }, [tickers]);
        
     return data;
