@@ -2,6 +2,7 @@ from datetime import datetime
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
+from sqlalchemy.ext.indexable import index_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -56,9 +57,13 @@ class TickerMention(Base):
 
 
 class Ticker(Base):
-    short_code = db.Column(db.String, unique=True)
-    name = db.Column(db.String)
-    classification = db.Column(JSONB)
+    symbol = db.Column(db.String, unique=True)
+    short_name = db.Column(db.String)
+    long_name = db.Column(db.String)
+    classification = db.Column(JSONB, default={})
+
+    sector = index_property('classification', 'sector')
+    industry = index_property('classification', 'industry')
 
 
 class Site(Base):
