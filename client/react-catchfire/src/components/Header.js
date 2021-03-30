@@ -1,14 +1,13 @@
 import React from 'react';
 import { Searchbar } from './Searchbar'
-//import { Container } from 'semantic-ui-react';
 
 const options = [
    {
-      key: "AMAZ",
+      key: "AMZN",
       content: "Amazon Corp.",
       text: "AMZN",
-      value: "AMAZ",
-      label: "AMAZ"
+      value: "AMZN",
+      label: "AMZN"
    },
    {
       key: "GOOG",
@@ -44,7 +43,7 @@ export const Header = ( {logoWidth, logoHeight} ) => {
                Link 0 
             </div>
             <div>
-               Link 1 
+               Link 1
             </div>
             <div>
                Link 2 
