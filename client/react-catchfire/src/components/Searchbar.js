@@ -8,7 +8,6 @@ export const Searchbar = ( {options} ) => {
 
     const onChangeSearchBar = ( e , {value} ) => {
         e.persist();
-        console.log(value);
         dispatch(setKeywords(value))
     }
 

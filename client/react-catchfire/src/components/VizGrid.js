@@ -1,8 +1,35 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux'
+
+
+const GetPriceData = tickers => {
+    const [data, setData] = useState([]);
+
+    useEffect(() => {
+        const request = {
+            "tickers" : tickers
+        }
+        console.log("POST")
+        fetch("/getPrice", {
+            method : "POST",
+            headers : {
+                        "Content-Type" : "application/json"
+            },
+            body: JSON.stringify(request)
+            }).then( response => response.json().then(data => {
+                        setData(data)
+                    }
+                )
+            )
+    }, [tickers]);
+       
+    return data;
+}
 
 export const VizGrid = ( ) => {
     const keywords = useSelector(state => state.keywords)
+
+    let data = GetPriceData(keywords);
 
     return (
        <div className="VizGrid">
@@ -13,10 +40,10 @@ export const VizGrid = ( ) => {
                 <div>
                     {
                         keywords.map(ticker => {
-                            console.log(ticker)
                             return (
                             <div key={ticker}>
                                 <div> {ticker} </div>
+                                <div> {data[ticker]} </div>
                             </div> 
                             )
                         })
