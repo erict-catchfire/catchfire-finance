@@ -56,7 +56,10 @@ Catchfire Finance Project Repository
    
 7. Populate Database [IN PROGRESS]
    ```
-   THIS FUNCTIONALITY DOES NOT EXIST YET
+   cd server
+   flask defaults sites
+   flask defaults tickers
+   [MORE TO COME]
    ```
 
 ### Run
