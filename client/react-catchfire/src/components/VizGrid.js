@@ -29,7 +29,7 @@ const GetPriceData = tickers => {
 export const VizGrid = ( ) => {
     const keywords = useSelector(state => state.keywords)
 
-    let data = GetPriceData(keywords);
+    const data = GetPriceData(keywords);
 
     return (
        <div className="VizGrid">
