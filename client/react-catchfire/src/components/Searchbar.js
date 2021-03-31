@@ -1,13 +1,41 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import { Dropdown } from 'semantic-ui-react';
 import { useDispatch} from 'react-redux'
 import { setKeywords } from '../actions'
 
-export const Searchbar = ( {options} ) => {
+const GetTickers = () => {
+    const [data, setData] = useState([]);
+
+    useEffect(() => {
+        fetch("/getTickers").then(response => {
+            response.json().then(data => {
+                const toSet = [];
+                for(const ticker in data){
+                    toSet.push(
+                        {
+                           key: ticker,
+                           content: data[ticker].longName,
+                           text: ticker,
+                           value: ticker,
+                           label: ticker     
+                        }
+                    )
+                }
+                setData(toSet)
+            });
+        });
+    }, []);
+       
+    return data;
+}
+
+export const Searchbar = () => {
     const dispatch = useDispatch();
 
+    const tickers = GetTickers();   
+
     const onChangeSearchBar = ( e , {value} ) => {
-        e.persist();
+        //e.persist();
         dispatch(setKeywords(value))
     }
 
@@ -17,9 +45,12 @@ export const Searchbar = ( {options} ) => {
             fluid
             multiple
             search
+            searchInput={['text','content']}
             selection
+            closeOnChange
             onChange={onChangeSearchBar}
-            options={options}
+            options={tickers}
+            loading={tickers.length===0}
             scrolling
             keepOnScreen={true}
         />

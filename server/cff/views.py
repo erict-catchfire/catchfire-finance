@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from .models import Ticker;
 import yfinance as yf;
 
 main = Blueprint('main', __name__)
@@ -21,3 +22,16 @@ def getPrice():
         ticker_dict[tick] = yf.Ticker(tick).history(period='1d')['Close'][0]
 
     return jsonify(ticker_dict)
+
+@main.route('/getTickers', methods=['GET'])
+def getTickers():
+    tickers = Ticker.query.all()
+    ticker_dict = {}
+
+    for tick in tickers:
+        ticker_dict[tick.symbol] = {
+            "longName" : tick.long_name
+        }
+        print(tick.symbol)
+
+    return ticker_dict
