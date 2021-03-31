@@ -30,6 +30,9 @@ Catchfire Finance Project Repository
    (optional) export FLASK_DEBUG=1
    export FLASK_APP=cff
    export DATABASE_URL='postgresql://postgres:postgres@localhost:5432/catchfire'
+   
+   # For right now:
+   export PYTHONPATH=.
    ```
    
 5. Setup Timescaledb
@@ -53,7 +56,10 @@ Catchfire Finance Project Repository
    
 7. Populate Database [IN PROGRESS]
    ```
-   THIS FUNCTIONALITY DOES NOT EXIST YET
+   cd server
+   flask defaults sites
+   flask defaults tickers
+   [MORE TO COME]
    ```
 
 ### Run
