@@ -9,7 +9,7 @@ const GetPriceData = tickers => {
         const request = {
             "tickers" : tickers
         }
-        console.log("POST")
+        
         fetch("/getPrice", {
             method : "POST",
             headers : {
