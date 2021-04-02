@@ -45,14 +45,12 @@ export const Searchbar = () => {
             fluid
             multiple
             search
-            searchInput={['text','content']}
             selection
             closeOnChange
             onChange={onChangeSearchBar}
             options={tickers}
             loading={tickers.length===0}
             scrolling
-            keepOnScreen={true}
         />
     )
 }
