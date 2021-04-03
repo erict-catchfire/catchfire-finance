@@ -1,61 +1,59 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux'
+//import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { DataTable } from './DataTable';
 
+// const GetPriceData = tickers => {
+//     const [data, setData] = useState([]);
 
-const GetPriceData = tickers => {
-    const [data, setData] = useState([]);
-
-    useEffect(() => {
-        const request = {
-            "tickers" : tickers
-        }
-        
-        fetch("/getPrice", {
-            method : "POST",
-            headers : {
-                "Content-Type" : "application/json"
-            },
-            body: JSON.stringify(request)
-        }).then(response => {
-            response.json().then(data => {
-                setData(data)
-            });
-        });
-    }, [tickers]);
+//     console.log("GET PRICE")
+//     useEffect(() => {
+//         if (tickers.length !== 0 ) {
+//             const request = {
+//                 "tickers" : tickers
+//             }
+            
+//             fetch("/getPrice", {
+//                 method : "POST",
+//                 headers : {
+//                     "Content-Type" : "application/json"
+//                 },
+//                 body: JSON.stringify(request)
+//             }).then(response => {
+//                 response.json().then(data => {
+//                     setData(data)
+//                 });
+//             });
+//         }
+//     }, [tickers]);
        
-    return data;
-}
+//     return data;
+// }
 
 export const VizGrid = ( ) => {
     const keywords = useSelector(state => state.keywords)
 
-    const data = GetPriceData(keywords);
+    // const data = GetPriceData(keywords);
 
     return (
        <div className="VizGrid">
-           <div className="Viz0"> 
-                <div>
-                    Viz0
-                </div>
-                <div>
-                    {
-                        keywords.map(ticker => {
-                            return (
-                            <div key={ticker}>
-                                <div> {ticker} </div>
-                                <div> {data[ticker]} </div>
-                            </div> 
-                            )
-                        })
-                    }
-                </div>
+           <div className="viz_wide"> 
+                <DataTable/>
            </div>
-           <div className="Viz1"> 
+           <div className="viz_wide"> 
                 <div>
                     Viz1
                 </div>
                 <div>
-                    {keywords}
+                {
+                        keywords.map(ticker => {
+                            return (
+                            <div key={ticker}>
+                                <div> {ticker} </div>
+                            </div> 
+                            )
+                        })
+                    }
                 </div>
            </div>
            <div className="Viz2"> 

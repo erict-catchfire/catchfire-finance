@@ -5,7 +5,7 @@
 }
 
 .VizGrid {
-  height: 100vh;
+  height: minmax(100vh,max-content);
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-gap : 1em;
@@ -21,7 +21,7 @@
   background: rgb(148, 148, 148);
 }
 
-.Viz2 {
+.viz_wide {
   grid-column: 1/3;
 }
 
