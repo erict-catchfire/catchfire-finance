@@ -15,7 +15,7 @@ const tableColumnsMap= {
                        };
 
 const GetTableData = () => {
-    const tickers            = useSelector(state => state.keywords)
+    const tickers = useSelector(state => state.keywords)
     const dispatch           = useDispatch();
 
     useEffect(() => {
