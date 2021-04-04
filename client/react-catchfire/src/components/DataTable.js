@@ -105,7 +105,7 @@ export const DataTable = () => {
                                 <Table.HeaderCell colSpan={3}> Information </Table.HeaderCell>
                                 <Table.HeaderCell colSpan={4}> Financials </Table.HeaderCell>
                             </Table.Row>
-                            <Table.Row >
+                            <Table.Row>
                                 {
                                     tableColumns.map( col =>
                                         <Table.HeaderCell key={ col }
