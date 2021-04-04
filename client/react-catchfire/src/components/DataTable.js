@@ -64,7 +64,7 @@ const InfoBar = () => {
     return (
         <div className="InfoBar" > 
             <div className="textDiv">            
-                Click for more explination. 
+                Click for more explanation.
             </div>
             <div className="radioDiv">            
                 <Radio toggle onClick={() => dispatch(toggleTableDimmer())}>
