@@ -57,6 +57,7 @@ const GetTableData = () => {
   }, [tickers, dispatch]);
 };
 
+
 export const DataTable = () => {
   const dispatch = useDispatch();
 
@@ -119,3 +120,4 @@ export const DataTable = () => {
     </>
   );
 };
+
