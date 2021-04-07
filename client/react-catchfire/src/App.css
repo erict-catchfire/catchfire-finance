@@ -9,7 +9,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-gap : 1em;
-  grid-auto-rows: minmax(200px, auto);
+  grid-auto-rows: minmax(50px, auto);
   padding: 1em;
 }
 
@@ -23,6 +23,21 @@
 
 .viz_wide {
   grid-column: 1/3;
+}
+
+.LineGraph {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-rows: minmax(200px, auto);
+  background: rgb(255, 255, 255);
+}
+
+.LineGraph > div:nth-child(odd){
+  background: #eee;
+}
+
+.LineGraph > div:nth-child(even){
+  background: rgb(255, 255, 255);
 }
 
 .InfoBar {
