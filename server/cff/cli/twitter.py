@@ -34,7 +34,6 @@ def twitter_seed():
             click.secho(f'Saved {count} of {total_tweets} test data tweets.', fg="green")
 
         count = count + 1
-        if count == 10:
-            return
+
     if live_run:
         click.secho(f'Committed remaining tweets.', fg="green")

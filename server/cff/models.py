@@ -1,5 +1,7 @@
 from datetime import datetime
 
+import click
+import re
 import yfinance as yf
 
 from reticker import TickerExtractor, TickerMatchConfig
@@ -123,17 +125,24 @@ class Document(Base):
 
         ticker_mentions = []
         for ticker in tickers:
-            mention = Ticker.create_or_noop(ticker)
+            _ticker, *extra = re.split('\.|=', ticker)
+            if len(_ticker) > 4:
+                return
+            mention = Ticker.create_or_noop(_ticker)
 
             if mention:
-                ticker_mentions.append(mention)
+                ticker_mentions.append({
+                    'mention': mention,
+                    'extra': extra if extra else None
+                })
 
         db.session.flush()
 
-        for mention in ticker_mentions:
+        for tm in ticker_mentions:
             TickerMention(
                 document_id=doc.id,
-                ticker_id=mention.id
+                ticker_id=tm['mention'].id,
+                extra=tm['extra']
             ).save()
 
 
@@ -146,6 +155,7 @@ class AccountMention(Base):
 class TickerMention(Base):
     document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False, index=True)
     ticker_id = db.Column(db.Integer, db.ForeignKey('ticker.id'), nullable=False)
+    extra = db.Column(db.String)
     ticker = relationship('Ticker', foreign_keys=[ticker_id])
 
 
@@ -154,6 +164,8 @@ class Ticker(Base):
     short_name = db.Column(db.String)
     long_name = db.Column(db.String)
     classification = db.Column(JSONB, default={})
+    logo_url = db.Column(db.String)
+    security_type = db.Column(db.String)
 
     sector = index_property('classification', 'sector')
     industry = index_property('classification', 'industry')
@@ -163,15 +175,18 @@ class Ticker(Base):
         ticker = Ticker.query.filter(Ticker.symbol == symbol).first()
 
         if not ticker:
+            click.secho(f'Looking up Ticker: {symbol}', fg="yellow")
             ticker_info = yf.Ticker(symbol).info
 
             if 'symbol' not in ticker_info:
-                return
+                click.secho(f'Ticker {symbol}, not found. Creating placeholder.', fg="red")
+                return Ticker(symbol=symbol).save()
 
             ticker = Ticker(
                 symbol=ticker_info['symbol'],
                 short_name=ticker_info['shortName'] if 'shortName' in ticker_info else None,
                 long_name=ticker_info['longName'] if 'longName' in ticker_info else None,
+                security_type=ticker_info['quoteType'] if 'quoteType' in ticker_info else None,
                 sector=ticker_info['sector'] if 'sector' in ticker_info else None,
                 industry=ticker_info['industry'] if 'industry' in ticker_info else None
             ).save()
