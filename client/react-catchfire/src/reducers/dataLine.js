@@ -7,12 +7,10 @@ const dataLineReducer = (state = {}, action) => {
   switch (action.type) {
     case "ADD_EMPTY_LINE_OBJECT":
       newItem = {
-        keyword: "",
+        keyword: null,
         dataName: "ats",
         color: "red",
         pattern: "solid",
-        data: {},
-        haveData: false,
       };
 
       newState[_uniqueId()] = newItem;
@@ -24,8 +22,6 @@ const dataLineReducer = (state = {}, action) => {
         dataName: "ats",
         color: "red",
         pattern: "solid",
-        data: {},
-        haveData: false,
       };
 
       newState[_uniqueId()] = newItem;
@@ -33,18 +29,16 @@ const dataLineReducer = (state = {}, action) => {
       return newState;
     case "REMOVE_LINE_OBJECT_KEYWORD":
       Object.keys(state).forEach((key) => {
-        console.log(state[key].keyword)
         if (state[key].keyword === action.payload) {
           delete newState[key];
         }
       });
       return newState;
-
     case "MODIFY_LINE_OBJECT":
       // type: "MODIFY_LINE_OBJECT",
       // id: id,
       // field: field,
-      // value: value 
+      // value: value
       newState[action.id][action.field] = action.value;
       return newState;
     case "REMOVE_LINE_OBJECT":
