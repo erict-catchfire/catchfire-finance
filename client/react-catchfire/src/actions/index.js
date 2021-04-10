@@ -39,7 +39,7 @@ export const addLineObjectwithKeyword = (keyword) => {
 };
 
 export const removeLineObjectwithKeyword = (keyword) => {
-  console.log(keyword)
+  console.log(keyword);
   return {
     type: "REMOVE_LINE_OBJECT_KEYWORD",
     payload: keyword,
@@ -51,6 +51,22 @@ export const modifyLineObject = (id, field, value) => {
     type: "MODIFY_LINE_OBJECT",
     id: id,
     field: field,
-    value: value 
+    value: value,
+  };
+};
+
+export const addDataAtId = (id, data) => {
+  return {
+    type: "ADD_LINE_DATA_AT_ID",
+    id: id,
+    payload: data,
+  };
+};
+
+export const removeDataAtId = (id) => {
+  console.log(id)
+  return {
+    type: "REMOVE_LINE_DATA_AT_ID",
+    id: id,
   };
 };
