@@ -125,7 +125,7 @@ class Document(Base):
 
         ticker_mentions = []
         for ticker in tickers:
-            _ticker, *extra = re.split('\.|=', ticker)
+            _ticker, *extra = re.split('([\.|=])', ticker)
             if len(_ticker) > 4:
                 return
             mention = Ticker.create_or_noop(_ticker)
@@ -133,7 +133,7 @@ class Document(Base):
             if mention:
                 ticker_mentions.append({
                     'mention': mention,
-                    'extra': extra if extra else None
+                    'extra': ''.join(extra) if extra else None
                 })
 
         db.session.flush()
