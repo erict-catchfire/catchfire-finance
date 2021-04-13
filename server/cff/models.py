@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 import click
 import re
@@ -35,17 +36,33 @@ class Account(Base):
     handle = db.Column(db.String, index=True)
     external_uid = db.Column(db.BIGINT)
     site_id = db.Column(db.Integer, db.ForeignKey('site.id'))
+    extra = db.Column(JSONB, default={})
     site = relationship('Site', foreign_keys=[site_id])
 
     @staticmethod
-    def create_or_noop(handle: str, external_uid: int, site_id: int):
-        account = Account.query.filter(Account.handle == handle).first()
+    def create_or_upsert(user: dict, site_id: int):
+        handle = user['username']
+
+        extra = {
+            'is_verified': user['verified'],
+            'location': user['location'],
+            'follower_count': user['followersCount'],
+            'friend_count': user['friendsCount'],
+            'status_count': user['statusesCount'],
+        }
+
+        account: Optional[Account] = Account.query.filter(Account.handle == handle).first()
         if not account:
+            extra['created_at'] = user['created']
             account = Account(
                 handle=handle,
-                external_uid=external_uid,
-                site_id=site_id
+                external_uid=user['id'],
+                site_id=site_id,
+                extra=extra
             ).save()
+        else:
+            account.extra = extra
+            account.save()
         return account
 
 
@@ -62,21 +79,28 @@ class Document(Base):
     context = db.Column(JSONB, default={})
 
     @staticmethod
-    def exists(external_uid: int):
-        doc = Document.query.filter(Document.external_uid == external_uid).first()
-        return doc is not None
+    def upsert(tweet: dict):
+        document: Optional[Document] = Document.query.filter(Document.external_uid == tweet['id']).first()
+        if document:
+            context = {
+                'reply_count': tweet['replyCount'],
+                'retweet_count': tweet['retweetCount'],
+                'like_count': tweet['likeCount'],
+                'quote_count': tweet['quoteCount'],
+            }
+            document.context = context
+            document.save()
+        return document is not None
 
     @staticmethod
     def generate_document_context_from_twitter(tweet: dict):
-        twitter_site = Site.query.filter(Site.name == 'Twitter').first()
-        handle = tweet['user']['username']
-        external_uid = tweet['id']
-        external_user_id = tweet['user']['id']
+        twitter_site: Optional[Site] = Site.query.filter(Site.name == 'Twitter').first()
+        user = tweet['user']
 
-        if Document.exists(external_uid):
+        if Document.upsert(tweet):
             return
 
-        owner_account = Account.create_or_noop(handle, external_user_id, twitter_site.id)
+        owner_account = Account.create_or_upsert(user, twitter_site.id)
 
         quoted_tweet = tweet['quotedTweet']
         if quoted_tweet:
@@ -86,13 +110,18 @@ class Document(Base):
         account_mentions = []
         if mentioned_users:
             for user in mentioned_users:
-                account = Account.create_or_noop(user['username'], user['id'], twitter_site.id)
+                account = Account.create_or_upsert(user, twitter_site.id)
                 account_mentions.append(account)
 
         db.session.flush()
 
         context = {
             'url': tweet['url'],
+            'conversation_id': tweet['conversationId'],
+            'reply_count': tweet['replyCount'],
+            'retweet_count': tweet['retweetCount'],
+            'like_count': tweet['likeCount'],
+            'quote_count': tweet['quoteCount'],
         }
 
         tweet_content = tweet['content']
@@ -102,7 +131,7 @@ class Document(Base):
             posted_at=tweet['date'],
             contents=tweet_content,
             site_id=twitter_site.id,
-            external_uid=external_uid,
+            external_uid=tweet['id'],
             context=context
         ).save()
 
@@ -172,7 +201,7 @@ class Ticker(Base):
 
     @staticmethod
     def create_or_noop(symbol: str):
-        ticker = Ticker.query.filter(Ticker.symbol == symbol).first()
+        ticker: Optional[Ticker] = Ticker.query.filter(Ticker.symbol == symbol).first()
 
         if not ticker:
             click.secho(f'Looking up Ticker: {symbol}', fg="yellow")
@@ -188,7 +217,7 @@ class Ticker(Base):
                 long_name=ticker_info['longName'] if 'longName' in ticker_info else None,
                 security_type=ticker_info['quoteType'] if 'quoteType' in ticker_info else None,
                 sector=ticker_info['sector'] if 'sector' in ticker_info else None,
-                industry=ticker_info['industry'] if 'industry' in ticker_info else None
+                industry=ticker_info['industry'] if 'industry' in ticker_info else None,
             ).save()
 
         return ticker

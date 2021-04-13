@@ -25,7 +25,7 @@ def twitter_seed():
     if click.confirm(f'Generate {total_tweets} test data tweets?'):
         live_run = True
 
-    count = 0
+    count = 1
     for tweet in data:
         Document.generate_document_context_from_twitter(tweet)
 
