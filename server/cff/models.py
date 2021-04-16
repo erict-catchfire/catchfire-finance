@@ -81,7 +81,10 @@ class Document(Base):
     @staticmethod
     def upsert(tweet: dict):
         document: Optional[Document] = Document.query.filter(Document.external_uid == tweet['id']).first()
-        if document:
+        tweet_date = tweet['date'].split('+')[0]
+        tweet_posted_at = datetime.strptime(tweet_date, '%Y-%m-%dT%H:%M:%S')
+
+        if document and tweet_posted_at > document.posted_at:
             context = {
                 'reply_count': tweet['replyCount'],
                 'retweet_count': tweet['retweetCount'],
@@ -90,21 +93,23 @@ class Document(Base):
             }
             document.context = context
             document.save()
-        return document is not None
+        return document
 
     @staticmethod
     def generate_document_context_from_twitter(tweet: dict):
         twitter_site: Optional[Site] = Site.query.filter(Site.name == 'Twitter').first()
         user = tweet['user']
 
-        if Document.upsert(tweet):
-            return
+        existing_doc = Document.upsert(tweet)
+        if existing_doc:
+            return existing_doc.id
 
         owner_account = Account.create_or_upsert(user, twitter_site.id)
 
         quoted_tweet = tweet['quotedTweet']
+        quote_tweet_id = None
         if quoted_tweet:
-            Document.generate_document_context_from_twitter(quoted_tweet)
+            quote_tweet_id = Document.generate_document_context_from_twitter(quoted_tweet)
 
         mentioned_users = tweet['mentionedUsers']
         account_mentions = []
@@ -122,6 +127,7 @@ class Document(Base):
             'retweet_count': tweet['retweetCount'],
             'like_count': tweet['likeCount'],
             'quote_count': tweet['quoteCount'],
+            'quoted_doc_id': quote_tweet_id
         }
 
         tweet_content = tweet['content']
@@ -156,7 +162,7 @@ class Document(Base):
         for ticker in tickers:
             _ticker, *extra = re.split('([\.|=])', ticker)
             if len(_ticker) > 4:
-                return
+                continue
             mention = Ticker.create_or_noop(_ticker)
 
             if mention:
@@ -174,6 +180,8 @@ class Document(Base):
                 extra=tm['extra']
             ).save()
 
+        return doc.id
+
 
 class AccountMention(Base):
     document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False, index=True)
@@ -189,7 +197,7 @@ class TickerMention(Base):
 
 
 class Ticker(Base):
-    symbol = db.Column(db.String, unique=True)
+    symbol = db.Column(db.String, unique=True, index=True)
     short_name = db.Column(db.String)
     long_name = db.Column(db.String)
     classification = db.Column(JSONB, default={})
@@ -230,5 +238,21 @@ class Site(Base):
 
 class DocumentSentiment(Base):
     sentiment = db.Column(JSONB, default={})
-    model_version = db.Column(db.String, nullable=True)
-    document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False)
+    model_version = db.Column(db.String, nullable=True, index=True)
+    document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False, index=True)
+
+    @staticmethod
+    def create_or_noop(document_id: int, model_version: str, sentiment_dict: dict):
+        sentiment: Optional[DocumentSentiment] = DocumentSentiment.query.filter(
+            DocumentSentiment.document_id == document_id,
+            DocumentSentiment.model_version == model_version
+        ).first()
+
+        if not sentiment:
+            sentiment = DocumentSentiment(
+                document_id=document_id,
+                model_version=model_version,
+                sentiment=sentiment_dict
+            ).save()
+
+        return sentiment
