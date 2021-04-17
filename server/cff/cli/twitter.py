@@ -14,7 +14,7 @@ twitter_cli = AppGroup('twitter')
 @click.option('--seed-sentiment', 'seed_sentiment',
               required=False, default=False, help='True/False generate random sentiment data.')
 def twitter_seed(seed_sentiment: bool):
-    click.secho(f'seed_sentiment: {seed_sentiment}', fg="green")
+    click.secho(f'Seeding twitter dataset; Creating sentiments? {seed_sentiment}', fg="green")
 
     os.chdir('seed')
 

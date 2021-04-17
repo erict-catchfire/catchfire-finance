@@ -12,6 +12,8 @@ from sqlalchemy.ext.indexable import index_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 
+from cff.cli.constants import TOP_500_CRYPTO
+
 db = SQLAlchemy()
 
 
@@ -161,8 +163,13 @@ class Document(Base):
         ticker_mentions = []
         for ticker in tickers:
             _ticker, *extra = re.split('([\.|=])', ticker)
-            if len(_ticker) > 4:
+            is_probably_crypto = TOP_500_CRYPTO[_ticker]
+
+            if len(_ticker) > 4 and not is_probably_crypto:
                 continue
+
+            if is_probably_crypto:
+                _ticker = _ticker + '-USD'
             mention = Ticker.create_or_noop(_ticker)
 
             if mention:
