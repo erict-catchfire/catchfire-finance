@@ -9,23 +9,23 @@ Catchfire Finance Project Repository
 
 ## /server Contains the Backend
 
-1. Go into /server.
+1. **Go into /server.**
    ```
    cd server
    ```
 
-2. Open Python Venv Shell
+2. **Open Python Venv Shell**
    ```
    pipenv shell
    ```
 
 ### Setup
-3. Download python dependencies
+3. **Download python dependencies**
    ```
    pipenv install
    ```
 
-4. Export Enviromental Variables; Add to load-step scripts for permanence
+4. **Export Environment Variables; Add to load-step scripts for permanence**
    ```
    (optional) export FLASK_DEBUG=1
    export FLASK_APP=cff
@@ -35,7 +35,7 @@ Catchfire Finance Project Repository
    export PYTHONPATH=.
    ```
    
-5. Setup Timescaledb
+5. **Setup Timescaledb**
    ```
    sudo add-apt-repository ppa:timescale/timescaledb-ppa
    sudo apt update
@@ -46,21 +46,54 @@ Catchfire Finance Project Repository
    
    # Restart Postgres
    sudo service postgresql restart
+   
+   # Set "postgres" user password
+   sudo -u postgres psql
+   ALTER USER postgres PASSWORD 'password';
    ```
    
-6. Generate Database
+6. **Generate Database**
    ```
    cd server
    python manage.py db upgrade
    ```
    
-7. Populate Database [IN PROGRESS]
+7. **Populate Database [IN PROGRESS]**
    ```
    cd server
-   flask defaults sites
-   flask defaults tickers
-   [MORE TO COME]
+   
+   1) flask defaults all
+   -> which contains: "flask defaults sites", and "flask defaults tickers"
+   2) flask twitter db_seed (add: --seed_sentiment=True, to seed sentiments)
    ```
+   **Seed Data**
+   
+   We currently have 4 Hashtags/Cashtags with seed data; All data is based on March 2021.
+   
+   Google, Microsoft, and Amazon are the entire month of march. 
+   
+   Gamestop is ridiculous, and has 4-5x tweets, the other 3 combined, in a week period - so we only have a week.
+   ```
+   # Google
+   snscrape --jsonl --progress --since 2021-03-01 twitter-search "'#GOOG OR $GOOG' \ 
+        -is:retweet lang:en until:2021-04-01" > goog_march_2021.json
+   
+   # Microsoft
+   snscrape --jsonl --progress --since 2021-03-01 twitter-search "'#MSFT OR $MSFT' \
+        -is:retweet lang:en until:2021-04-01" > msft_march_2021.json
+   
+   # Amazon
+   snscrape --jsonl --progress --since 2021-03-01 twitter-search "'#AMZN OR $AMZN' \
+        -is:retweet lang:en until:2021-04-01" > amzn_march_2021.json
+   
+   # Gamestop
+   snscrape --jsonl --progress --since 2021-03-24 twitter-search "'#GME OR $GME' \
+        -is:retweet lang:en until:2021-04-01" > gme_last_week_of_march_2021.json
+   ```
+   
+   I'm not entirely certain that the `-is:retweet` is actually preventing retweets from being picked up, or maybe
+   there just aren't many retweets in the tags we're looking for. I've tried running with and without.
+   We need a couple tweaks to correctly ingest retweets and the data around them - but we can figure that out later.
 
 ### Run
    ```
@@ -94,14 +127,20 @@ Catchfire Finance Project Repository
   ```
   pipenv sync
   ```
+
 ## /client Contains the Frontend
 
 1. Go into /client.
    ```
    cd client/react-catchfire
    ```
+   
+2. Install dependencies
+   ```
+   npm i
+   ```
 
-2. Start Site
+3. Start Site
    ```
    npm start
    ```
