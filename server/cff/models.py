@@ -1,10 +1,18 @@
 from datetime import datetime
+from typing import Optional
 
+import click
+import re
+import yfinance as yf
+
+from reticker import TickerExtractor, TickerMatchConfig
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from sqlalchemy.ext.indexable import index_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
+
+from cff.cli.constants import TOP_500_CRYPTO
 
 db = SQLAlchemy()
 
@@ -17,7 +25,7 @@ class Base(db.Model):
     updated_at = db.Column(db.DateTime, server_default=text("(now() at time zone 'utc')"))
 
     def save(self, session=None):
-        self.updated_at = datetime.now()
+        self.updated_at = datetime.utcnow()
         if not session:
             session = db.session
 
@@ -27,9 +35,37 @@ class Base(db.Model):
 
 
 class Account(Base):
-    handle = db.Column(db.String)
+    handle = db.Column(db.String, index=True)
+    external_uid = db.Column(db.BIGINT)
     site_id = db.Column(db.Integer, db.ForeignKey('site.id'))
+    extra = db.Column(JSONB, default={})
     site = relationship('Site', foreign_keys=[site_id])
+
+    @staticmethod
+    def create_or_upsert(user: dict, site_id: int):
+        handle = user['username']
+
+        extra = {
+            'is_verified': user['verified'],
+            'location': user['location'],
+            'follower_count': user['followersCount'],
+            'friend_count': user['friendsCount'],
+            'status_count': user['statusesCount'],
+        }
+
+        account: Optional[Account] = Account.query.filter(Account.handle == handle).first()
+        if not account:
+            extra['created_at'] = user['created']
+            account = Account(
+                handle=handle,
+                external_uid=user['id'],
+                site_id=site_id,
+                extra=extra
+            ).save()
+        else:
+            account.extra = extra
+            account.save()
+        return account
 
 
 class Document(Base):
@@ -41,7 +77,117 @@ class Document(Base):
     posted_at = db.Column(db.DateTime)
     sentiments = relationship('DocumentSentiment', uselist=True)
     site_id = db.Column(db.Integer, db.ForeignKey('site.id'), index=True)
-    site_resource = db.Column(db.String)
+    external_uid = db.Column(db.BIGINT, index=True)
+    context = db.Column(JSONB, default={})
+
+    @staticmethod
+    def upsert(tweet: dict):
+        document: Optional[Document] = Document.query.filter(Document.external_uid == tweet['id']).first()
+        tweet_date = tweet['date'].split('+')[0]
+        tweet_posted_at = datetime.strptime(tweet_date, '%Y-%m-%dT%H:%M:%S')
+
+        if document and tweet_posted_at > document.posted_at:
+            context = {
+                'reply_count': tweet['replyCount'],
+                'retweet_count': tweet['retweetCount'],
+                'like_count': tweet['likeCount'],
+                'quote_count': tweet['quoteCount'],
+            }
+            document.context = context
+            document.save()
+        return document
+
+    @staticmethod
+    def generate_document_context_from_twitter(tweet: dict):
+        twitter_site: Optional[Site] = Site.query.filter(Site.name == 'Twitter').first()
+        user = tweet['user']
+
+        existing_doc = Document.upsert(tweet)
+        if existing_doc:
+            return existing_doc.id
+
+        owner_account = Account.create_or_upsert(user, twitter_site.id)
+
+        quoted_tweet = tweet['quotedTweet']
+        quote_tweet_id = None
+        if quoted_tweet:
+            quote_tweet_id = Document.generate_document_context_from_twitter(quoted_tweet)
+
+        mentioned_users = tweet['mentionedUsers']
+        account_mentions = []
+        if mentioned_users:
+            for user in mentioned_users:
+                account = Account.create_or_upsert(user, twitter_site.id)
+                account_mentions.append(account)
+
+        db.session.flush()
+
+        context = {
+            'url': tweet['url'],
+            'conversation_id': tweet['conversationId'],
+            'reply_count': tweet['replyCount'],
+            'retweet_count': tweet['retweetCount'],
+            'like_count': tweet['likeCount'],
+            'quote_count': tweet['quoteCount'],
+            'quoted_doc_id': quote_tweet_id
+        }
+
+        tweet_content = tweet['content']
+
+        doc = Document(
+            account_id=owner_account.id,
+            posted_at=tweet['date'],
+            contents=tweet_content,
+            site_id=twitter_site.id,
+            external_uid=tweet['id'],
+            context=context
+        ).save()
+
+        db.session.flush()
+
+        for acc_mention in account_mentions:
+            AccountMention(
+                document_id=doc.id,
+                account_id=acc_mention.id,
+            ).save()
+
+        ticker_match_config = TickerMatchConfig(
+            prefixed_uppercase=True,
+            prefixed_lowercase=True,
+            prefixed_titlecase=False,
+            unprefixed_uppercase=False
+        )
+        extractor = TickerExtractor(deduplicate=True, match_config=ticker_match_config)
+        tickers = extractor.extract(tweet_content)
+
+        ticker_mentions = []
+        for ticker in tickers:
+            _ticker, *extra = re.split('([\.|=])', ticker)
+            is_probably_crypto = TOP_500_CRYPTO[_ticker]
+
+            if len(_ticker) > 4 and not is_probably_crypto:
+                continue
+
+            if is_probably_crypto:
+                _ticker = _ticker + '-USD'
+            mention = Ticker.create_or_noop(_ticker)
+
+            if mention:
+                ticker_mentions.append({
+                    'mention': mention,
+                    'extra': ''.join(extra) if extra else None
+                })
+
+        db.session.flush()
+
+        for tm in ticker_mentions:
+            TickerMention(
+                document_id=doc.id,
+                ticker_id=tm['mention'].id,
+                extra=tm['extra']
+            ).save()
+
+        return doc.id
 
 
 class AccountMention(Base):
@@ -53,17 +199,43 @@ class AccountMention(Base):
 class TickerMention(Base):
     document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False, index=True)
     ticker_id = db.Column(db.Integer, db.ForeignKey('ticker.id'), nullable=False)
+    extra = db.Column(db.String)
     ticker = relationship('Ticker', foreign_keys=[ticker_id])
 
 
 class Ticker(Base):
-    symbol = db.Column(db.String, unique=True)
+    symbol = db.Column(db.String, unique=True, index=True)
     short_name = db.Column(db.String)
     long_name = db.Column(db.String)
     classification = db.Column(JSONB, default={})
+    logo_url = db.Column(db.String)
+    security_type = db.Column(db.String)
 
     sector = index_property('classification', 'sector')
     industry = index_property('classification', 'industry')
+
+    @staticmethod
+    def create_or_noop(symbol: str):
+        ticker: Optional[Ticker] = Ticker.query.filter(Ticker.symbol == symbol).first()
+
+        if not ticker:
+            click.secho(f'Looking up Ticker: {symbol}', fg="yellow")
+            ticker_info = yf.Ticker(symbol).info
+
+            if 'symbol' not in ticker_info:
+                click.secho(f'Ticker {symbol}, not found. Creating placeholder.', fg="red")
+                return Ticker(symbol=symbol).save()
+
+            ticker = Ticker(
+                symbol=ticker_info['symbol'],
+                short_name=ticker_info['shortName'] if 'shortName' in ticker_info else None,
+                long_name=ticker_info['longName'] if 'longName' in ticker_info else None,
+                security_type=ticker_info['quoteType'] if 'quoteType' in ticker_info else None,
+                sector=ticker_info['sector'] if 'sector' in ticker_info else None,
+                industry=ticker_info['industry'] if 'industry' in ticker_info else None,
+            ).save()
+
+        return ticker
 
 
 class Site(Base):
@@ -73,5 +245,21 @@ class Site(Base):
 
 class DocumentSentiment(Base):
     sentiment = db.Column(JSONB, default={})
-    model_version = db.Column(db.String, nullable=True)
-    document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False)
+    model_version = db.Column(db.String, nullable=True, index=True)
+    document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False, index=True)
+
+    @staticmethod
+    def create_or_noop(document_id: int, model_version: str, sentiment_dict: dict):
+        sentiment: Optional[DocumentSentiment] = DocumentSentiment.query.filter(
+            DocumentSentiment.document_id == document_id,
+            DocumentSentiment.model_version == model_version
+        ).first()
+
+        if not sentiment:
+            sentiment = DocumentSentiment(
+                document_id=document_id,
+                model_version=model_version,
+                sentiment=sentiment_dict
+            ).save()
+
+        return sentiment
