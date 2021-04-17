@@ -70,3 +70,20 @@ export const removeDataAtId = (id) => {
     id: id,
   };
 };
+
+export const setStartEndLineGraph = (start , end) => {
+  console.log("set start end")
+  return {
+    type: "SET_START_END_LINE_GRAPH",
+    start: start,
+    end: end
+  };
+};
+
+export const setDataMinMaxLineGraph = (min , max) => {
+  return {
+    type: "SET_MIN_MAX_LINE_GRAPH",
+    min: min,
+    max: max
+  };
+};

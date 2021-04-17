@@ -1,6 +1,6 @@
 .GridContainer {
   display: grid;
-  grid-template-columns: 15% 70% 15%;
+  grid-template-columns: auto 1024px auto;
   grid-template-rows: auto 1fr 1fr;
 }
 
@@ -8,7 +8,7 @@
   height: minmax(100vh,max-content);
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-gap : 1em;
+  grid-gap : 20px;
   grid-auto-rows: minmax(50px, auto);
   padding: 1em;
 }
@@ -32,13 +32,13 @@
   background: rgb(255, 255, 255);
 }
 
-.LineGraph > div:nth-child(odd){
+/* .LineGraph > div:nth-child(odd){
   background: #eee;
 }
 
 .LineGraph > div:nth-child(even){
   background: rgb(255, 255, 255);
-}
+} */
 
 .InfoBar {
   display: grid;
