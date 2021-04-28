@@ -52,12 +52,12 @@ export const SelectionItem = ({ id }) => {
   const defaultPattern = controlItems[id].pattern;
 
   const handleKeywordDropdownChange = (e, { value }) => {
-    dispatch(removeDataAtId(id));
+    dispatch(modifyLineObject(id, "dirty", true));
     dispatch(modifyLineObject(id, "keyword", value));
   };
 
   const handleDataDropdownChange = (e, { value }) => {
-    dispatch(removeDataAtId(id));
+    dispatch(modifyLineObject(id, "dirty", true));
     dispatch(modifyLineObject(id, "dataName", value));
   };
 

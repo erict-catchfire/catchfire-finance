@@ -39,7 +39,6 @@ export const addLineObjectwithKeyword = (keyword) => {
 };
 
 export const removeLineObjectwithKeyword = (keyword) => {
-  console.log(keyword);
   return {
     type: "REMOVE_LINE_OBJECT_KEYWORD",
     payload: keyword,
@@ -64,7 +63,6 @@ export const addDataAtId = (id, data) => {
 };
 
 export const removeDataAtId = (id) => {
-  console.log(id)
   return {
     type: "REMOVE_LINE_DATA_AT_ID",
     id: id,
@@ -72,7 +70,6 @@ export const removeDataAtId = (id) => {
 };
 
 export const setStartEndLineGraph = (start , end) => {
-  console.log("set start end")
   return {
     type: "SET_START_END_LINE_GRAPH",
     start: start,

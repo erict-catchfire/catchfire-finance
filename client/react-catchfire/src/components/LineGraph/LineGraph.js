@@ -3,7 +3,7 @@ import { GraphPanal } from "./GraphPanal";
 import { ControlPanal } from "./ControlPanal";
 import { InfoBar } from "../InfoBar";
 import { useSelector, useDispatch } from "react-redux";
-import { addDataAtId } from "../../actions";
+import { addDataAtId, modifyLineObject } from "../../actions";
 import _ from "lodash";
 
 const randomDate = (start, end, startHour, endHour) => {
@@ -36,13 +36,12 @@ export const LineGraph = () => {
 
   useEffect(() => {
     controlKeys.forEach((element) => {
-      if (dataItems[element] === undefined && controlItems[element].keyword) {
+      if ((dataItems[element] === undefined || controlItems[element].dirty) && controlItems[element].keyword) {
         console.log(
           "GET DATA FOR : ",
           controlItems[element].keyword,
           controlItems[element].dataName
         );
-        //const data = [0, 1, 2, 3, 4, 5, controlItems[element].dataName];
         const data = randomTimeSeries(
           50,
           15,
@@ -50,6 +49,7 @@ export const LineGraph = () => {
           new Date(2021, 0, 1)
         );
         dispatch(addDataAtId(element, data));
+        dispatch(modifyLineObject(element, "dirty", false));
       }
     });
   }, [controlItems]);
