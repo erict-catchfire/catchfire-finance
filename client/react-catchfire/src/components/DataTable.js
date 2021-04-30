@@ -25,7 +25,6 @@ const GetTableData = () => {
         tickers: tickers,
       };
 
-      console.log("TABLE_POST");
       fetch("/getTableData", {
         method: "POST",
         headers: {

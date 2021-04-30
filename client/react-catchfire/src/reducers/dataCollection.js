@@ -4,9 +4,9 @@ const dataCollectionReducer = (state = {}, action) => {
   switch (action.type) {
     case "ADD_LINE_DATA_AT_ID":
       newState[action.id] = action.payload;
+      newState[action.id]["id"] = action.id;
       return newState;
     case "REMOVE_LINE_DATA_AT_ID":
-      console.log(action.id)
       delete newState[action.id];
       return newState;
     default:

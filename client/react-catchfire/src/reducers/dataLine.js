@@ -11,6 +11,7 @@ const dataLineReducer = (state = {}, action) => {
         dataName: "ats",
         color: "red",
         pattern: "solid",
+        dirty: false
       };
 
       newState[_uniqueId()] = newItem;
@@ -22,6 +23,7 @@ const dataLineReducer = (state = {}, action) => {
         dataName: "ats",
         color: "red",
         pattern: "solid",
+        dirty: false
       };
 
       newState[_uniqueId()] = newItem;
