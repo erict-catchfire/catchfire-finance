@@ -3,8 +3,13 @@ import { GraphPanal } from "./GraphPanal";
 import { ControlPanal } from "./ControlPanal";
 import { InfoBar } from "../InfoBar";
 import { useSelector, useDispatch } from "react-redux";
-import { addDataAtId, modifyLineObject } from "../../actions";
+import {
+  addDataAtId,
+  modifyLineObject,
+  toggleChartDimmer,
+} from "../../actions";
 import _ from "lodash";
+import { Dimmer } from "semantic-ui-react";
 
 const randomDate = (start, end, startHour, endHour) => {
   var date = new Date(+start + Math.random() * (end - start));
@@ -33,10 +38,14 @@ export const LineGraph = () => {
   const controlItems = useSelector((state) => state.dataLine);
   const dataItems = useSelector((state) => state.dataCollection);
   const controlKeys = Object.keys(controlItems);
+  const dimmerState = useSelector((state) => state.chartDimmer);
 
   useEffect(() => {
     controlKeys.forEach((element) => {
-      if ((dataItems[element] === undefined || controlItems[element].dirty) && controlItems[element].keyword) {
+      if (
+        (dataItems[element] === undefined || controlItems[element].dirty) &&
+        controlItems[element].keyword
+      ) {
         console.log(
           "GET DATA FOR : ",
           controlItems[element].keyword,
@@ -56,11 +65,16 @@ export const LineGraph = () => {
 
   return (
     <>
-      <div className="LineGraph">
-        <GraphPanal />
-        <ControlPanal />
-      </div>
-      <InfoBar />
+      <Dimmer.Dimmable blurring dimmed={dimmerState}>
+        <Dimmer active={dimmerState}>
+          <div>HELP TEXT OR IMAGE</div>
+        </Dimmer>
+        <div className="LineGraph">
+          <GraphPanal />
+          <ControlPanal />
+        </div>
+      </Dimmer.Dimmable>
+      <InfoBar toggleFunction={toggleChartDimmer()} />
     </>
   );
 };

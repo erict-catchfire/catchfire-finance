@@ -5,6 +5,8 @@ import {
   setKeywords,
   addLineObjectwithKeyword,
   removeLineObjectwithKeyword,
+  addTextObjectwithKeyword,
+  removeTextObjectwithKeyword,
 } from "../actions";
 
 const GetTickers = () => {
@@ -42,11 +44,13 @@ export const Searchbar = () => {
     if (keywords.length < value.length) {
       dispatch(setKeywords(value));
       dispatch(addLineObjectwithKeyword(value[value.length - 1]));
+      dispatch(addTextObjectwithKeyword(value[value.length - 1]));
     } else {
       const removedKeyword = keywords.filter(
         (keyword) => value.indexOf(keyword) === -1
       );
       dispatch(removeLineObjectwithKeyword(removedKeyword[0]));
+      dispatch(removeTextObjectwithKeyword(removedKeyword[0]));
       dispatch(setKeywords(value));
     }
   };
