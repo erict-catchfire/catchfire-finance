@@ -12,6 +12,7 @@ py-healthcheck = "*"
 click = "*"
 yfinance = "*"
 reticker = "*"
+black = "*"
 
 [dev-packages]
 
