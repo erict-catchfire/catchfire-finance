@@ -13,6 +13,7 @@ click = "*"
 yfinance = "*"
 reticker = "*"
 black = "*"
+pre-commit = "*"
 
 [dev-packages]
 
