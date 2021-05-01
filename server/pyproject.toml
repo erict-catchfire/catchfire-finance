@@ -2,15 +2,9 @@
 line-length = 120
 target-version = ['py38']
 
-include = '''
-(
-    nothing
-)
-'''
 
 exclude = '''
 (
-    \.git
-  | ^/migrations
+    ^/migrations
 )
 '''
