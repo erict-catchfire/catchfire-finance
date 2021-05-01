@@ -1,10 +1,15 @@
 [tool.black]
 line-length = 120
 target-version = ['py38']
-
+ 
+include = '''
+(
+    ^/cff
+)
+'''
 
 exclude = '''
 (
-    ^/migrations
+    __pycache__
 )
 '''
