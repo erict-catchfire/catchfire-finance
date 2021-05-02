@@ -4,7 +4,7 @@ import {
   setStartEndLineGraph
 } from "../../actions/index";
 import * as d3 from "d3";
-import { values, keys } from "d3-collection";
+import { values } from "d3-collection";
 
 const duration = 500;
 
@@ -305,7 +305,6 @@ export const GraphPanal = () => {
       <LineChart
         width={width}
         height={width / 1.9}
-        /*data={dataItems.length == 0 ? null : dataItems[dataKeys[0]]}*/
         data={dataItems}
       />
     </div>
