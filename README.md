@@ -101,6 +101,16 @@ Catchfire Finance Project Repository
    ```
 
 ### Useful Functions
+#### Code formatting
+- Python Config: `pyproject.toml`
+- Python Formatting
+  ```
+  # Check files to be touched
+  black --check .
+  
+  # Run formatter on touched files
+  black .
+  ```
 #### Database operations
 - Migrations
    ```
