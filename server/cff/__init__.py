@@ -1,5 +1,7 @@
 from flask import Flask
 from healthcheck import HealthCheck
+from rq import Queue
+from worker import conn
 
 from cff.models import db
 from cff.views import main
@@ -11,6 +13,8 @@ app.config.from_pyfile("config.py")
 
 db.app = app
 db.init_app(app)
+
+q = Queue(connection=conn)
 
 from cff.cli.site import site_cli
 from cff.cli.defaults import defaults_cli

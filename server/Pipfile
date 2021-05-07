@@ -12,8 +12,9 @@ py-healthcheck = "*"
 click = "*"
 yfinance = "*"
 reticker = "*"
-black = "*"
 pre-commit = "*"
+rq = "==1.8.0"
+black = "==21.4b2"
 
 [dev-packages]
 
