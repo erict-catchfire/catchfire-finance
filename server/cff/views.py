@@ -1,17 +1,12 @@
 from flask import Blueprint, request, jsonify
-from .models import Ticker
+from cff.models import Ticker
 import yfinance as yf
 
 main = Blueprint("main", __name__)
 
 
-@main.route("/test")
-def test():
-    return "Hello world!"
-
-
 @main.route("/getPrice", methods=["POST"])
-def getPrice():
+def get_price():
     request_object = request.get_json()
     ticker_dict = {}
 
@@ -26,7 +21,7 @@ def getPrice():
 
 
 @main.route("/getTableData", methods=["POST"])
-def getTableData():
+def get_table_data():
     ticker_dict = {}
     request_object = request.get_json()
     requested_tickers = request_object["tickers"]
@@ -67,7 +62,7 @@ def getTableData():
 
 
 @main.route("/getTickers", methods=["GET"])
-def getTickers():
+def get_tickers():
     tickers = Ticker.query.all()
     ticker_dict = {}
 

@@ -7,7 +7,7 @@ import yfinance as yf
 
 from cff import db
 from cff.models import Site, Ticker
-from .constants import DEFAULT_SITE_MAP, DEFAULT_SUPPORTED_TICKERS
+from cff.cli import constants as cli_c
 
 defaults_cli = AppGroup("defaults")
 
@@ -20,7 +20,7 @@ def default_all():
 
 @defaults_cli.command("sites")
 def default_sites():
-    site_imports = DEFAULT_SITE_MAP
+    site_imports = cli_c.DEFAULT_SITE_MAP
     for site in reversed(site_imports):
         site_name = site["name"]
         exists = Site.query.filter(Site.name == site_name).first()
@@ -41,7 +41,7 @@ def default_sites():
 
 @defaults_cli.command("tickers")
 def default_tickers():
-    ticker_imports = DEFAULT_SUPPORTED_TICKERS
+    ticker_imports = cli_c.DEFAULT_SUPPORTED_TICKERS
     for ticker in reversed(ticker_imports):
         exists = Ticker.query.filter(Ticker.symbol == ticker).first()
         if exists:

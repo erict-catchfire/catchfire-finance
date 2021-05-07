@@ -5,7 +5,8 @@ import random
 import click
 from flask.cli import AppGroup
 
-from cff.models import db, Document, DocumentSentiment
+from cff import db
+from cff.models import Document, DocumentSentiment
 
 twitter_cli = AppGroup("twitter")
 
