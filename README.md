@@ -9,6 +9,12 @@ Catchfire Finance Project Repository
 
 ## /server Contains the Backend
 
+0. **Go into /server.**
+   ```
+   sudo apt install redis-server
+   pip install pipenv
+   ```
+
 1. **Go into /server.**
    ```
    cd server

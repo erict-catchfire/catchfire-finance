@@ -1,9 +1,9 @@
 from flask import Flask
 from healthcheck import HealthCheck
 from rq import Queue
-from worker import conn
 
 from cff.models import db
+from cff.worker import conn
 from cff.views import main
 
 
