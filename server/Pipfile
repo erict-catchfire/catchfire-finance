@@ -17,6 +17,11 @@ rq = "==1.8.0"
 black = "==21.4b2"
 
 [dev-packages]
+ipython = "*"
+line-profiler = "*"
 
 [requires]
 python_version = "3.8"
+
+[dev-packages.snscrape]
+git = "https://github.com/JustAnotherArchivist/snscrape.git"
