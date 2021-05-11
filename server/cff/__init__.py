@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from healthcheck import HealthCheck
 from rq import Queue
@@ -6,6 +8,7 @@ from cff.models import db
 from cff.worker import conn
 from cff.views import main
 
+ROOT_DIR = os.path.abspath(os.curdir)
 
 app = Flask(__name__)
 app.register_blueprint(main)
@@ -14,7 +17,7 @@ app.config.from_pyfile("config.py")
 db.app = app
 db.init_app(app)
 
-q = Queue(connection=conn)
+q = Queue(connection=conn, default_timeout=600)
 
 from cff.cli.site import site_cli
 from cff.cli.defaults import defaults_cli

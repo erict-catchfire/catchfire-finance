@@ -5,9 +5,8 @@ from flask.cli import AppGroup
 
 import yfinance as yf
 
-from cff import db
+from cff import constants as c, db
 from cff.models import Site, Ticker
-from cff.cli import constants as cli_c
 
 defaults_cli = AppGroup("defaults")
 
@@ -20,7 +19,7 @@ def default_all():
 
 @defaults_cli.command("sites")
 def default_sites():
-    site_imports = cli_c.DEFAULT_SITE_MAP
+    site_imports = c.DEFAULT_SITE_MAP
     for site in reversed(site_imports):
         site_name = site["name"]
         exists = Site.query.filter(Site.name == site_name).first()
@@ -41,7 +40,7 @@ def default_sites():
 
 @defaults_cli.command("tickers")
 def default_tickers():
-    ticker_imports = cli_c.DEFAULT_SUPPORTED_TICKERS
+    ticker_imports = c.DEFAULT_SUPPORTED_TICKERS
     for ticker in reversed(ticker_imports):
         exists = Ticker.query.filter(Ticker.symbol == ticker).first()
         if exists:
