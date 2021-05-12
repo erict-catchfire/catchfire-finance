@@ -17,7 +17,7 @@ app.config.from_pyfile("config.py")
 db.app = app
 db.init_app(app)
 
-q = Queue(connection=conn, default_timeout=600)
+q = Queue(connection=conn, default_timeout=-1)
 
 from cff.cli.site import site_cli
 from cff.cli.defaults import defaults_cli

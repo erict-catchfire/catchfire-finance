@@ -27,7 +27,7 @@ def _get_latest_tweet_external_uid_by_ticker(lookup_symbol: Optional[str] = None
     return query.first().external_uid
 
 
-@job("twitter", connection=conn)
+@job("twitter", connection=conn, timeout=-1)
 def do_the_job(lookup_symbol: str):
     if not lookup_symbol:
         return []
