@@ -41,6 +41,18 @@ export const unsetChartDimmer = () => {
   };
 };
 
+export const toggleWordCloudDimmer = () => {
+  return {
+    type: "TOGGLE_WC_DIMMER",
+  };
+};
+
+export const toggleTreeMapDimmer = () => {
+  return {
+    type: "TOGGLE_WC_DIMMER",
+  };
+};
+
 /*****************************************************/
 // Line Related Functions
 
@@ -163,6 +175,16 @@ export const addTextObjectwithKeyword = (keyword) => {
 export const removeTextObjectwithKeyword = (keyword) => {
   return {
     type: "REMOVE_TEXT_OBJECT_KEYWORD",
+    payload: keyword,
+  };
+};
+
+/*****************************************************/
+// Page Functions
+
+export const setPage = (keyword) => {
+  return {
+    type: "SET_PAGE",
     payload: keyword,
   };
 };
