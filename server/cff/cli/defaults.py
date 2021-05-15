@@ -48,17 +48,7 @@ def default_tickers():
             ticker_imports.remove(ticker)
             continue
 
-        ticker_info = yf.Ticker(ticker).info
-
-        new_ticker = Ticker(
-            symbol=ticker_info["symbol"],
-            short_name=ticker_info["shortName"],
-            long_name=ticker_info["longName"],
-            sector=ticker_info["sector"],
-            industry=ticker_info["industry"],
-            logo_url=ticker_info["logo_url"],
-        )
-        new_ticker.save()
+        Ticker.create_or_noop(ticker)
 
     if ticker_imports:
         db.session.commit()

@@ -52,7 +52,7 @@ def do_the_job(lookup_symbol: str):
         doc_id = Document.generate_document_context_from_twitter(tweet)
         new_doc_ids.append(doc_id)
 
-    db.session.commit()
+    # db.session.commit()
 
     print(f"New documents: {new_doc_ids}, created.")
     if os.path.isfile(temp_file):

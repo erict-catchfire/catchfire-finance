@@ -4,6 +4,7 @@ from typing import Optional
 import click
 import re
 import yfinance as yf
+import pyEX as px
 
 from reticker import TickerExtractor, TickerMatchConfig
 from flask_sqlalchemy import SQLAlchemy
@@ -15,6 +16,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from cff.cli.constants import TOP_500_CRYPTO
 
 db = SQLAlchemy()
+pxc = px.Client(version="sandbox", api_token="Tpk_66f23b42a5954d30b00959371cfc0744")
 
 
 class Base(db.Model):
@@ -205,19 +207,33 @@ class Ticker(Base):
 
         if not ticker:
             click.secho(f"Looking up Ticker: {symbol}", fg="yellow")
-            ticker_info = yf.Ticker(symbol).info
+            # ticker_info = yf.Ticker(symbol).info
+            ticker_info = pxc.company(symbol)
 
             if "symbol" not in ticker_info:
                 click.secho(f"Ticker {symbol}, not found. Creating placeholder.", fg="red")
                 return Ticker(symbol=symbol).save()
 
+            # ticker = Ticker(
+            #     symbol=ticker_info["symbol"],
+            #     short_name=ticker_info["shortName"] if "shortName" in ticker_info else None,
+            #     long_name=ticker_info["longName"] if "longName" in ticker_info else None,
+            #     security_type=ticker_info["quoteType"] if "quoteType" in ticker_info else None,
+            #     sector=ticker_info["sector"] if "sector" in ticker_info else None,
+            #     industry=ticker_info["industry"] if "industry" in ticker_info else None,
+            # ).save()
+
+            classification = {
+                # 'sector': ticker_info["sector"],
+                # 'industry': ticker_info["industry"],
+                # 'tags': ticker_info["tags"]
+            }
+
             ticker = Ticker(
                 symbol=ticker_info["symbol"],
-                short_name=ticker_info["shortName"] if "shortName" in ticker_info else None,
-                long_name=ticker_info["longName"] if "longName" in ticker_info else None,
-                security_type=ticker_info["quoteType"] if "quoteType" in ticker_info else None,
-                sector=ticker_info["sector"] if "sector" in ticker_info else None,
-                industry=ticker_info["industry"] if "industry" in ticker_info else None,
+                long_name=ticker_info["companyName"] if "companyName" in ticker_info else None,
+                security_type=ticker_info["issueType"] if "issueType" in ticker_info else None,
+                # classification=classification
             ).save()
 
         return ticker
