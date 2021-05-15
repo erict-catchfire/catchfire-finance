@@ -1,7 +1,12 @@
 import React from "react";
 import { Searchbar } from "./Searchbar";
+import { useDispatch, useSelector } from "react-redux";
+import { setPage } from "../actions";
+import { Button } from "semantic-ui-react";
 
 export const Header = ({ logoWidth, logoHeight }) => {
+  const dispatch = useDispatch();
+
   return (
     <div className="Header">
       <div>
@@ -13,10 +18,18 @@ export const Header = ({ logoWidth, logoHeight }) => {
         <Searchbar />
       </div>
       <div className="HeaderLinks">
-        <div>Link 0</div>
-        <div>Link 1</div>
-        <div>Link 2</div>
-        <div>Link 3</div>
+        <Button size="mini" onClick={() => dispatch(setPage("home"))}>
+          Home
+        </Button>
+        <Button size="mini" onClick={() => dispatch(setPage("viz"))}>
+          Viz.
+        </Button>
+        <Button size="mini" onClick={() => dispatch(setPage("about"))}>
+          About
+        </Button>
+        <Button size="mini" onClick={() => dispatch(setPage("donation"))}>
+          Donation
+        </Button>
       </div>
     </div>
   );

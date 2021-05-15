@@ -9,6 +9,7 @@ import dataCollectionReducer from "./dataCollection";
 import dataTextReducer from "./dataText";
 import textCollectionReducer from "./textCollection";
 import lineGraphReducer from "./lineGraph";
+import pageReducer from "./page";
 
 const allReducers = combineReducers({
   keywords: keywordReducer,
@@ -20,7 +21,8 @@ const allReducers = combineReducers({
   dataCollection: dataCollectionReducer,
   dataText: dataTextReducer,
   textCollection: textCollectionReducer,
-  lineGraph: lineGraphReducer
+  lineGraph: lineGraphReducer,
+  page: pageReducer,
 });
 
 export default allReducers;
