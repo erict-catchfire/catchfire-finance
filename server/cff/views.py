@@ -1,8 +1,26 @@
 from flask import Blueprint, request, jsonify
 from cff.models import Ticker
 import yfinance as yf
+from cff.sentiment import predict_sentiment
+from cff.sentiment import process_text
 
 main = Blueprint("main", __name__)
+
+
+@main.route("/getSentiment", methods=["POST"])
+def get_sentiment():
+    request_object = request.get_json()
+    sentiment_dict = {}
+
+    strings_for_processing = request_object["strings"]
+    if not strings_for_processing:
+        return "Include valid strings for request", 400
+
+    processed_text = process_text(strings_for_processing)
+    sentiment_dict["results"] = predict_sentiment(processed_text)
+    print(sentiment_dict)
+
+    return jsonify(sentiment_dict)
 
 
 @main.route("/getPrice", methods=["POST"])
