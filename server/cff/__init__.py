@@ -4,7 +4,6 @@ from healthcheck import HealthCheck
 from cff.models import db
 from cff.views import main
 
-
 app = Flask(__name__)
 app.register_blueprint(main)
 app.config.from_pyfile("config.py")

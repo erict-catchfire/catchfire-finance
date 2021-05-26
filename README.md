@@ -4,6 +4,8 @@ Catchfire Finance Project Repository
 ## Built With
 
 * [React](https://reactjs.org/)
+* [Redux]
+* [d3]
 * [Flask](https://flask.palletsprojects.com/en/1.1.x/)
 * [SQLAlchemy](https://www.sqlalchemy.org/)
 

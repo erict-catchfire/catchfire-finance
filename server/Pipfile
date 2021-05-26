@@ -14,6 +14,12 @@ yfinance = "*"
 reticker = "*"
 black = "*"
 pre-commit = "*"
+nltk = "*"
+contractions = "*"
+jsbeautifier = "*"
+tensorflow = "*"
+sklearn = "*"
+tensorflow-text = "*"
 
 [dev-packages]
 
