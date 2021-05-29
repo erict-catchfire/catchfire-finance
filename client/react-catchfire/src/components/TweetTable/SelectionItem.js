@@ -101,7 +101,7 @@ export const SelectionItem = ({ id }) => {
           defaultValue={defaultLength}
           onChange={handleLengthDropdownChange}
         />{" "}
-        . Include the top {" "}
+        . Include the top{" "}
         <Dropdown
           floating
           inline

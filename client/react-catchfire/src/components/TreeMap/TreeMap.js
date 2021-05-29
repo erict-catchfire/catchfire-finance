@@ -11,7 +11,7 @@ export const TreeMap = () => {
         <Dimmer active={false}>
           <div>HELP TEXT OR IMAGE</div>
         </Dimmer>
-        <div className="TreeMap">
+        <div className="TreeMap" style={{ paddingLeft: "5%" }}>
           <TreeMapPanel />
         </div>
       </Dimmer.Dimmable>
