@@ -38,7 +38,7 @@ const TreeMapCanvas = ({ width, height, data }) => {
     var color = d3
       .scaleOrdinal()
       .domain(["Crypto", "Angry Sentiment", "Positive Sentiment"])
-      .range(["#402D54", "#D18975", "#8FD175"]);
+      .range(["#99CCCC", "#99CC99", "#FF99CC"]);
 
     var opacity = d3.scaleLinear().domain([10, 30]).range([0.5, 1]);
 

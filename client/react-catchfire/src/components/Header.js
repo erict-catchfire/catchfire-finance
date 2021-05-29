@@ -3,16 +3,15 @@ import { Searchbar } from "./Searchbar";
 import { useDispatch, useSelector } from "react-redux";
 import { setPage } from "../actions";
 import { Button } from "semantic-ui-react";
+import logo from "../logo.png";
 
 export const Header = ({ logoWidth, logoHeight }) => {
   const dispatch = useDispatch();
 
   return (
     <div className="Header">
-      <div>
-        <svg width={logoWidth} height={logoHeight}>
-          {<rect width={logoWidth} height={logoHeight} />}
-        </svg>
+      <div style={{ paddingTop: "1.5%" }}>
+        <img className="img-responsive" class="img-responsive" src={logo} alt="logo"></img>
       </div>
       <div className="Searchbar">
         <Searchbar />
