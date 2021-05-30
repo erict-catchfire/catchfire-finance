@@ -144,7 +144,7 @@ Catchfire Finance Project Repository
 
 ### Run
    ```
-   flask run & rq-dashboard & rq worker historical & rq worker realtime &
+   flask run & rq-dashboard & rq worker historical --with-scheduler & rq worker realtime & --with-scheduler
    ```
    **To manage background tasks:**
    ```
