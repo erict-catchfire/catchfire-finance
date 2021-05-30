@@ -37,6 +37,10 @@ Catchfire Finance Project Repository
    export FLASK_APP=cff
    export DATABASE_URL='postgresql://postgres:postgres@localhost:5432/catchfire'
    
+   # Log in to IEX Cloud:
+   export IEX_SANDBOX='<sandbox_token>'
+   export IEX_PROD='<token>' 
+   
    # For right now:
    export PYTHONPATH=.
    ```
