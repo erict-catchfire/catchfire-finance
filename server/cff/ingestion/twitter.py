@@ -7,19 +7,20 @@ import sqlalchemy
 from rq import Queue
 from rq.decorators import job
 
-from cff import conn, db
-from cff.models import Document, Site
+from cff.models import db, Document, Site
+from cff.historical_worker import conn as hist_conn
+from cff.realtime_worker import conn as real_conn
 
 TEMP_DIR = "temp"
 MINIMUM_FAVES = 2
 
 
-@job("historical", connection=conn, timeout=-1)
+@job("historical", connection=hist_conn, timeout=-1)
 def bg_query_historical_by_symbol(symbol: str, fresh: bool = False):
     _bg_query_tweets_for_symbol(symbol, sqlalchemy.asc, fresh)
 
 
-@job("realtime", connection=conn, timeout=-1)
+@job("realtime", connection=real_conn, timeout=-1)
 def bg_query_realtime_by_symbol(symbol: str):
     _bg_query_tweets_for_symbol(symbol, sqlalchemy.desc)
 
@@ -87,7 +88,7 @@ def _bg_query_tweets_for_symbol(
         if probably_more_tweets:
             bg_query_realtime_by_symbol.delay(lookup_symbol)
         else:
-            realtime_queue = Queue("realtime", connection=conn)
+            realtime_queue = Queue("realtime", connection=real_conn)
             realtime_queue.enqueue_in(timedelta(minutes=30), bg_query_realtime_by_symbol, lookup_symbol)
     elif asc_or_desc == sqlalchemy.asc and probably_more_tweets:
         bg_query_historical_by_symbol.delay(lookup_symbol)
