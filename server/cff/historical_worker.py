@@ -3,7 +3,7 @@ import os
 import redis
 from rq import Worker, Queue, Connection
 
-listen = ["twitter"]
+listen = ["historical"]
 
 redis_url = os.getenv("RQ_REDIS_URL", "redis://localhost:6379")
 

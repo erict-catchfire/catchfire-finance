@@ -5,7 +5,7 @@ from healthcheck import HealthCheck
 from rq import Queue
 
 from cff.models import db
-from cff.worker import conn
+from cff.historical_worker import conn
 from cff.views import main
 
 ROOT_DIR = os.path.abspath(os.curdir)
@@ -14,14 +14,22 @@ app = Flask(__name__)
 app.register_blueprint(main)
 app.config.from_pyfile("config.py")
 
+IEX_TOKEN = app.config.get("IEX_TOKEN", None)
+if not IEX_TOKEN:
+    raise ValueError("Missing IEX token for current environment.")
+
+SQLALCHEMY_DATABASE_URI = app.config.get("SQLALCHEMY_DATABASE_URI", None)
+if not SQLALCHEMY_DATABASE_URI:
+    raise ValueError("No database uri provide for catchfire-finance.")
+
 db.app = app
 db.init_app(app)
 
-q = Queue(connection=conn, default_timeout=-1)
+IS_DEVELOPMENT = app.config.get("DEVELOPMENT", None)
 
-from cff.cli.site import site_cli
-from cff.cli.defaults import defaults_cli
-from cff.cli.twitter import twitter_cli
+from .cli.site import site_cli
+from .cli.defaults import defaults_cli
+from .cli.twitter import twitter_cli
 
 app.cli.add_command(site_cli)
 app.cli.add_command(defaults_cli)

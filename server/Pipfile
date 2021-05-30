@@ -4,18 +4,19 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-Flask = "*"
-Flask-SQLAlchemy = "*"
-Flask-Migrate = "*"
-Flask-Script = "*"
+Flask = "==1.1.4"
+Flask-SQLAlchemy = "==2.5.1"
+Flask-Script = "==2.0.6"
+Flask-Migrate = "==2.7.0"
 py-healthcheck = "*"
 click = "*"
 yfinance = "*"
 reticker = "*"
-pre-commit = "*"
+pre-commit = "==2.12.1"
 rq = "==1.8.0"
 black = "==21.4b2"
 rq-dashboard = "*"
+pyEX = "==0.5.0"
 
 [dev-packages]
 ipython = "*"
@@ -24,5 +25,5 @@ line-profiler = "*"
 [requires]
 python_version = "3.8"
 
-[dev-packages.snscrape]
+[packages.snscrape]
 git = "https://github.com/JustAnotherArchivist/snscrape.git"

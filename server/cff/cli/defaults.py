@@ -3,8 +3,6 @@ import os
 import click
 from flask.cli import AppGroup
 
-import yfinance as yf
-
 from cff import constants as c, db
 from cff.models import Site, Ticker
 

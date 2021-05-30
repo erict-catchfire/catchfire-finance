@@ -11,5 +11,6 @@ include = '''
 exclude = '''
 (
     __pycache__
+    | ^/cff/constants.py
 )
 '''

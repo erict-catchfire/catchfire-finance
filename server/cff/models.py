@@ -1,22 +1,25 @@
 from datetime import datetime
 from typing import Optional
+from enum import Enum
 
 import click
 import re
-import yfinance as yf
-import pyEX as px
 
 from reticker import TickerExtractor, TickerMatchConfig
 from flask_sqlalchemy import SQLAlchemy
+import pyEX as px
 from sqlalchemy import text
 from sqlalchemy.ext.indexable import index_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 
-from cff.cli.constants import TOP_500_CRYPTO
+from cff import config
+from cff.constants import CryptoList
+
+CRYPTO_LIST = CryptoList().map
+iex = px.Client(api_token=config.IEX_TOKEN, version=config.IEX_ENV)
 
 db = SQLAlchemy()
-pxc = px.Client(version="sandbox", api_token="Tpk_66f23b42a5954d30b00959371cfc0744")
 
 
 class Base(db.Model):
@@ -77,6 +80,8 @@ class Document(Base):
     external_uid = db.Column(db.BIGINT, index=True)
     context = db.Column(JSONB, default={})
 
+    lookup_symbol = index_property("context", "lookup_symbol")
+
     @staticmethod
     def upsert(tweet: dict):
         document: Optional[Document] = Document.query.filter(Document.external_uid == tweet["id"]).first()
@@ -84,18 +89,19 @@ class Document(Base):
         tweet_posted_at = datetime.strptime(tweet_date, "%Y-%m-%dT%H:%M:%S")
 
         if document and tweet_posted_at > document.posted_at:
-            context = {
-                "reply_count": tweet["replyCount"],
-                "retweet_count": tweet["retweetCount"],
-                "like_count": tweet["likeCount"],
-                "quote_count": tweet["quoteCount"],
-            }
+            context = document.context
+
+            context["reply_count"] = tweet["replyCount"]
+            context["retweet_count"] = tweet["retweetCount"]
+            context["like_count"] = tweet["likeCount"]
+            context["quote_count"] = tweet["quoteCount"]
+
             document.context = context
             document.save()
         return document
 
     @staticmethod
-    def generate_document_context_from_twitter(tweet: dict):
+    def generate_document_context_from_twitter(tweet: dict, lookup_symbol: str):
         twitter_site: Optional[Site] = Site.query.filter(Site.name == "Twitter").first()
         user = tweet["user"]
 
@@ -108,7 +114,7 @@ class Document(Base):
         quoted_tweet = tweet["quotedTweet"]
         quote_tweet_id = None
         if quoted_tweet:
-            quote_tweet_id = Document.generate_document_context_from_twitter(quoted_tweet)
+            quote_tweet_id = Document.generate_document_context_from_twitter(quoted_tweet, lookup_symbol)
 
         mentioned_users = tweet["mentionedUsers"]
         account_mentions = []
@@ -127,6 +133,7 @@ class Document(Base):
             "like_count": tweet["likeCount"],
             "quote_count": tweet["quoteCount"],
             "quoted_doc_id": quote_tweet_id,
+            "lookup_symbol": lookup_symbol,
         }
 
         tweet_content = tweet["content"]
@@ -157,14 +164,12 @@ class Document(Base):
         ticker_mentions = []
         for ticker in tickers:
             _ticker, *extra = re.split("([\.|=])", ticker)
-            is_probably_crypto = TOP_500_CRYPTO[_ticker]
+            is_probably_crypto = CRYPTO_LIST[_ticker]
 
             if len(_ticker) > 4 and not is_probably_crypto:
                 continue
 
-            if is_probably_crypto:
-                _ticker = _ticker + "-USD"
-            mention = Ticker.create_or_noop(_ticker)
+            mention = Ticker.create_or_noop(_ticker, is_probably_crypto)
 
             if mention:
                 ticker_mentions.append({"mention": mention, "extra": "".join(extra) if extra else None})
@@ -197,46 +202,49 @@ class Ticker(Base):
     classification = db.Column(JSONB, default={})
     logo_url = db.Column(db.String)
     security_type = db.Column(db.String)
+    extra = db.Column(JSONB, default={})
 
     sector = index_property("classification", "sector")
     industry = index_property("classification", "industry")
+    status = index_property("extra", "status")
 
     @staticmethod
-    def create_or_noop(symbol: str):
+    def create_or_noop(symbol: str, probably_crypto: bool = False):
         ticker: Optional[Ticker] = Ticker.query.filter(Ticker.symbol == symbol).first()
 
         if not ticker:
             click.secho(f"Looking up Ticker: {symbol}", fg="yellow")
-            # ticker_info = yf.Ticker(symbol).info
-            ticker_info = pxc.company(symbol)
 
-            if "symbol" not in ticker_info:
+            if probably_crypto:
+                click.secho(f"Ticker {symbol}, probably crypto. Creating placeholder.", fg="magenta")
+                return Ticker(symbol=symbol, status=TickerStatus.placeholder.value).save()
+
+            try:
+                ticker_info = iex.company(symbol)
+            except px.PyEXception:
                 click.secho(f"Ticker {symbol}, not found. Creating placeholder.", fg="red")
-                return Ticker(symbol=symbol).save()
-
-            # ticker = Ticker(
-            #     symbol=ticker_info["symbol"],
-            #     short_name=ticker_info["shortName"] if "shortName" in ticker_info else None,
-            #     long_name=ticker_info["longName"] if "longName" in ticker_info else None,
-            #     security_type=ticker_info["quoteType"] if "quoteType" in ticker_info else None,
-            #     sector=ticker_info["sector"] if "sector" in ticker_info else None,
-            #     industry=ticker_info["industry"] if "industry" in ticker_info else None,
-            # ).save()
+                return Ticker(symbol=symbol, status=TickerStatus.placeholder.value).save()
 
             classification = {
-                # 'sector': ticker_info["sector"],
-                # 'industry': ticker_info["industry"],
-                # 'tags': ticker_info["tags"]
+                "sector": ticker_info["sector"],
+                "industry": ticker_info["industry"],
+                "tags": ticker_info["tags"],
             }
 
             ticker = Ticker(
                 symbol=ticker_info["symbol"],
                 long_name=ticker_info["companyName"] if "companyName" in ticker_info else None,
                 security_type=ticker_info["issueType"] if "issueType" in ticker_info else None,
-                # classification=classification
+                classification=classification,
+                status=TickerStatus.hydrated.value,
             ).save()
 
         return ticker
+
+
+class TickerStatus(Enum):
+    placeholder = "placeholder"
+    hydrated = "hydrated"
 
 
 class Site(Base):
