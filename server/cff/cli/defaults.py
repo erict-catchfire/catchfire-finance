@@ -3,11 +3,8 @@ import os
 import click
 from flask.cli import AppGroup
 
-import yfinance as yf
-
-from cff import db
+from cff import constants as c, db
 from cff.models import Site, Ticker
-from cff.cli import constants as cli_c
 
 defaults_cli = AppGroup("defaults")
 
@@ -20,7 +17,7 @@ def default_all():
 
 @defaults_cli.command("sites")
 def default_sites():
-    site_imports = cli_c.DEFAULT_SITE_MAP
+    site_imports = c.DEFAULT_SITE_MAP
     for site in reversed(site_imports):
         site_name = site["name"]
         exists = Site.query.filter(Site.name == site_name).first()
@@ -41,7 +38,7 @@ def default_sites():
 
 @defaults_cli.command("tickers")
 def default_tickers():
-    ticker_imports = cli_c.DEFAULT_SUPPORTED_TICKERS
+    ticker_imports = c.DEFAULT_SUPPORTED_TICKERS
     for ticker in reversed(ticker_imports):
         exists = Ticker.query.filter(Ticker.symbol == ticker).first()
         if exists:
@@ -49,17 +46,7 @@ def default_tickers():
             ticker_imports.remove(ticker)
             continue
 
-        ticker_info = yf.Ticker(ticker).info
-
-        new_ticker = Ticker(
-            symbol=ticker_info["symbol"],
-            short_name=ticker_info["shortName"],
-            long_name=ticker_info["longName"],
-            sector=ticker_info["sector"],
-            industry=ticker_info["industry"],
-            logo_url=ticker_info["logo_url"],
-        )
-        new_ticker.save()
+        Ticker.create_or_noop(ticker)
 
     if ticker_imports:
         db.session.commit()

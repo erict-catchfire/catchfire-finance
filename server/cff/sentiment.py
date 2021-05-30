@@ -1,9 +1,9 @@
 # Data Science Packages
 import tensorflow as tf
 from keras.models import load_model
-import numpy as np 
+import numpy as np
 import pandas as pd
-import sys 
+import sys
 
 # JSON
 import jsbeautifier
@@ -16,7 +16,7 @@ import re
 import nltk
 from nltk.tokenize.toktok import ToktokTokenizer
 import contractions
-import tensorflow_text 
+import tensorflow_text
 
 # TODO: Make Enviromental Variable
 model = tf.keras.models.load_model("./cff/model/electra_5_19_bert")
@@ -167,6 +167,7 @@ def process_text(text):
     # Remove some duplication that could occur from preprocessing
     modified_text = modified_text.map(remove_dup)
     return np.array(modified_text).tolist()
+
 
 def predict_sentiment(string_array):
     model_input = pd.Series(string_array)

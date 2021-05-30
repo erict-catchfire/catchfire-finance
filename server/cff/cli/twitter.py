@@ -6,7 +6,8 @@ import click
 from flask.cli import AppGroup
 
 from cff import db
-from cff.models import Document, DocumentSentiment
+from cff.models import Document, DocumentSentiment, Ticker
+from cff.ingestion import twitter
 
 twitter_cli = AppGroup("twitter")
 
@@ -38,7 +39,7 @@ def twitter_seed(seed_sentiment: bool):
 
     count = 1
     for tweet in data:
-        doc_id = Document.generate_document_context_from_twitter(tweet)
+        doc_id = Document.generate_document_context_from_twitter(tweet, "seed_data")
         doc: Document = Document.query.get(doc_id)
         quoted_id = doc.context["quoted_doc_id"] if doc.context["quoted_doc_id"] else None
         if seed_sentiment:
@@ -88,3 +89,28 @@ def _seed_sentiment_emotions(doc_id: int):
     }
 
     DocumentSentiment.create_or_noop(doc_id, "seed_emotions", sentiment)
+
+
+@twitter_cli.command("add_ticker")
+@click.argument("tickers", required=True, nargs=-1)
+@click.option("--crypto", "crypto", required=False, default=False, help="True/False, Tickers are crypto")
+def add_ticker(tickers, crypto):
+    if not tickers:
+        click.secho(f"Tickers must be specified to add. Exiting", fg="red")
+        return
+
+    if click.confirm(f"Do you want to save the following tickers: {tickers}?"):
+        for ticker in tickers:
+            Ticker.create_or_noop(ticker, crypto)
+        click.secho(f"Saved: {tickers}", fg="green")
+        db.session.commit()
+
+    if click.confirm(f"Trigger historical data gathering for: {tickers}?"):
+        for ticker in tickers:
+            twitter.bg_query_historical_by_symbol.delay(ticker, True)
+        click.secho(f"Gathering historical data for: {tickers}", fg="green")
+
+    if click.confirm(f"Trigger realtime data gathering for: {tickers}?"):
+        for ticker in tickers:
+            twitter.bg_query_realtime_by_symbol.delay(ticker)
+        click.secho(f"Gathering realtime data for: {tickers}", fg="green")

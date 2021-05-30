@@ -11,6 +11,12 @@ Catchfire Finance Project Repository
 
 ## /server Contains the Backend
 
+0. **Go into /server.**
+   ```
+   sudo apt install redis-server
+   pip install pipenv
+   ```
+
 1. **Go into /server.**
    ```
    cd server
@@ -32,6 +38,10 @@ Catchfire Finance Project Repository
    (optional) export FLASK_DEBUG=1
    export FLASK_APP=cff
    export DATABASE_URL='postgresql://postgres:postgres@localhost:5432/catchfire'
+   
+   # Log in to IEX Cloud:
+   export IEX_SANDBOX='<sandbox_token>'
+   export IEX_PROD='<token>' 
    
    # For right now:
    export PYTHONPATH=.
@@ -60,7 +70,9 @@ Catchfire Finance Project Repository
    python manage.py db upgrade
    ```
    
-7. **Populate Database [IN PROGRESS]**
+7. **[SNAPSHOT DATA] Populate Database**
+   
+   _NOTE: Skip this step, if you would prefer to just grab_
    ```
    cd server
    
@@ -97,9 +109,50 @@ Catchfire Finance Project Repository
    there just aren't many retweets in the tags we're looking for. I've tried running with and without.
    We need a couple tweaks to correctly ingest retweets and the data around them - but we can figure that out later.
 
+
+7. **[LIVE DATA INGESTION] Start ingestion jobs**
+   **Add new ticker:**
+   ```
+   cd server
+   flask twitter add_ticker <ticker> [<ticker> <ticker>...]
+   > Do you want to save the following tickers: [<ticker list>]? (y/n)
+        - Y; Saves a database row for the new ticker
+        - N; Skip
+   > Trigger historical data gathering for: [<ticker list>]? (y/n)
+        - Y; Triggers background job to scrape for all past tweets
+        - N; Skip
+   > Trigger realtime data gathering for: [<ticker list>]? (y/n)
+        - Y; Triggers background job for maintaining "live" tweet data
+        - N; Skip
+   ```
+   **Save the ticker:**
+   - Only say "Y" when it is a brand new ticker; It won't do anything if you try to save a ticker again.
+
+   **Historical data gathering:**
+   - This triggers a job chain that will passively populate the entire history of tweets for a ticker. 
+   - This is relatively lightweight and reliable:
+     - 500 tweets are scraped and saved into a temporary file 
+     - then processed, and the temporary file is removed,
+     - then the document objects are saved, and another job is kicked off to get the next 500.
+       
+   **"Realtime" data gathering:**
+   - Depending on how many tweets have been posted since the last run, the behavior may very:
+   - Query for 500 tweets; Ingest; Save 
+        1) If exactly 500 tweets were found -> immediately trigger another job, because there are potentially more.
+        2) If less than 500 were found -> Queue a job to check again in 30 minutes.
+
+
 ### Run
    ```
-   flask run
+   flask run & rq-dashboard & rq worker historical --with-scheduler & rq worker realtime & --with-scheduler
+   ```
+   **To manage background tasks:**
+   ```
+   # Find them
+   jobs
+   
+   # Kill them
+   kill %<job_number>
    ```
 
 ### Useful Functions
