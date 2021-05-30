@@ -9,7 +9,7 @@ const tableColumnsMap = {
   User: "user",
   Text: "text",
   Sent: "sent",
-  Anger: "anger"
+  Anger: "anger",
 };
 
 export const TweetPanel = () => {
@@ -17,7 +17,9 @@ export const TweetPanel = () => {
   const dataKeys = Object.keys(dataItems);
   const dispatch = useDispatch();
 
-  const { column, data, direction } = useSelector(state => state.textCollection);
+  const { column, data, direction } = useSelector(
+    (state) => state.textCollection
+  );
 
   const width = 1024 - 30;
 
@@ -33,36 +35,35 @@ export const TweetPanel = () => {
       >
         <Table.Header>
           <Table.Row>
-          {tableColumns.map((col) => (
-                  <Table.HeaderCell
-                    key={col}
-                    colSpan={1}
-                    sorted={column === tableColumnsMap[col] ? direction : null}
-                    onClick={() =>
-                      dispatch({
-                        type: "CHANGE_TWEET_SORT",
-                        column: tableColumnsMap[col],
-                      })
-                    }
-                  >
-                    {" "}
-                    {col}{" "}
-                  </Table.HeaderCell>
-                ))}            
+            {tableColumns.map((col) => (
+              <Table.HeaderCell
+                key={col}
+                colSpan={1}
+                sorted={column === tableColumnsMap[col] ? direction : null}
+                onClick={() =>
+                  dispatch({
+                    type: "CHANGE_TWEET_SORT",
+                    column: tableColumnsMap[col],
+                  })
+                }
+              >
+                {" "}
+                {col}{" "}
+              </Table.HeaderCell>
+            ))}
           </Table.Row>
         </Table.Header>
 
         <Table.Body>
           {data.map((data) => (
-              <Table.Row key={_.uniqueId()}>
-                <Table.Cell> {data.date.toString()} </Table.Cell>
-                <Table.Cell> {data.user} </Table.Cell>
-                <Table.Cell> {data.text} </Table.Cell>
-                <Table.Cell> {data.sent} </Table.Cell>
-                <Table.Cell> {data.anger} </Table.Cell>
-              </Table.Row>
-            ))
-          }
+            <Table.Row key={_.uniqueId()}>
+              <Table.Cell> {data.date.toString()} </Table.Cell>
+              <Table.Cell> {data.user} </Table.Cell>
+              <Table.Cell> {data.text} </Table.Cell>
+              <Table.Cell> {data.sent} </Table.Cell>
+              <Table.Cell> {data.anger} </Table.Cell>
+            </Table.Row>
+          ))}
         </Table.Body>
       </Table>
     </div>

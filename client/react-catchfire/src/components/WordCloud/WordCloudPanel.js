@@ -66,7 +66,7 @@ const WordCloudCanvas = ({ width, height, data }) => {
       })
       .attr("cx", innerWidth / 2)
       .attr("cy", innerHeight / 2)
-      .style("fill", "red") //function(d){ return color(d.region)})
+      .style("fill", "#FF9999") //function(d){ return color(d.region)})
       .style("fill-opacity", 0.8)
       .attr("stroke", "black")
       .style("stroke-width", 1)

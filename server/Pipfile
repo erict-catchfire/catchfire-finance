@@ -17,6 +17,13 @@ rq = "==1.8.0"
 black = "==21.4b2"
 rq-dashboard = "*"
 pyEX = "==0.5.0"
+nltk = "*"
+contractions = "*"
+jsbeautifier = "*"
+tensorflow = "*"
+sklearn = "*"
+tensorflow-text = "*"
+
 
 [dev-packages]
 ipython = "*"

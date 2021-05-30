@@ -1,12 +1,8 @@
-import os
-
 from flask import Flask
 from healthcheck import HealthCheck
 
 from cff.models import db
 from cff.views import main
-
-ROOT_DIR = os.path.abspath(os.curdir)
 
 app = Flask(__name__)
 app.register_blueprint(main)
