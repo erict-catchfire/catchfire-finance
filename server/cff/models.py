@@ -226,9 +226,9 @@ class Ticker(Base):
                 return Ticker(symbol=symbol, status=TickerStatus.placeholder.value).save()
 
             classification = {
-                "sector": ticker_info["sector"],
-                "industry": ticker_info["industry"],
-                "tags": ticker_info["tags"],
+                "sector": ticker_info["sector"] if "sector" in ticker_info else None,
+                "industry": ticker_info["industry"] if "industry" in ticker_info else None,
+                "tags": ticker_info["tags"] if "tags" in ticker_info else None,
             }
 
             ticker = Ticker(
