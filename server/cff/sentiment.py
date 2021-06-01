@@ -1,9 +1,10 @@
+import os
+import sys
+
 # Data Science Packages
 import tensorflow as tf
-from keras.models import load_model
 import numpy as np
 import pandas as pd
-import sys
 
 # JSON
 import jsbeautifier
@@ -13,13 +14,17 @@ opts.indent_size = 2
 
 # NLP Packages
 import re
-import nltk
 from nltk.tokenize.toktok import ToktokTokenizer
 import contractions
-import tensorflow_text
 
-# TODO: Make Enviromental Variable
-model = tf.keras.models.load_model("./cff/model/electra_5_19_bert")
+_MODEL_FILE = os.environ.get("MODEL_FILE")
+LOAD_MODEL = True
+
+if LOAD_MODEL and _MODEL_FILE:
+    import nltk
+    import tensorflow_text
+
+    model = tf.keras.models.load_model(f"./cff/model/{_MODEL_FILE}")
 
 
 def lower_case(text):

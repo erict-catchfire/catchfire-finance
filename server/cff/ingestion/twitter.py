@@ -1,12 +1,15 @@
 import json
 import os
 from datetime import timedelta
-from typing import Optional, Union
+from typing import Optional, Union, List
 
+import numpy as np
 import sqlalchemy
 from rq import Queue
 from rq.decorators import job
+from sqlalchemy import asc
 
+from cff import sentiment
 from cff.models import db, Document, Site
 from cff.historical_worker import conn as hist_conn
 from cff.realtime_worker import conn as real_conn
@@ -70,8 +73,10 @@ def _bg_query_tweets_for_symbol(
 
     new_doc_ids = []
     for tweet in tweets:
-        doc_id = Document.generate_document_context_from_twitter(tweet, lookup_symbol)
-        new_doc_ids.append(doc_id)
+        docs_created = Document.generate_document_context_from_twitter(tweet, lookup_symbol)
+        for doc_id, is_new in docs_created:
+            if is_new:
+                new_doc_ids.append(doc_id)
 
     db.session.commit()
 
@@ -93,6 +98,9 @@ def _bg_query_tweets_for_symbol(
     elif asc_or_desc == sqlalchemy.asc and probably_more_tweets:
         bg_query_historical_by_symbol.delay(lookup_symbol)
 
+    if new_doc_ids:
+        bg_generate_sentiments.delay(new_doc_ids)
+
     return new_doc_ids
 
 
@@ -107,3 +115,30 @@ def _get_tweet_by_ticker(lookup_symbol: Optional[str] = None, asc_or_desc=None):
 
     first = query.first()
     return first if first else None
+
+
+@job("sentiment", connection=hist_conn, timeout=-1)
+def bg_generate_sentiments(doc_ids: List[int]):
+    _generate_sentiments_for_doc_ids(doc_ids)
+
+
+def _generate_sentiments_for_doc_ids(doc_ids: List[int]):
+    docs = (
+        db.session.query(Document.id, Document.contents)
+        .filter(Document.id.in_(doc_ids))
+        .order_by(asc(Document.id))
+        .all()
+    )
+
+    doc: Document
+    array_of_doc_ids = [doc.id for doc in docs]
+    array_of_doc_text = [doc.contents for doc in docs]
+
+    processed_text: np.array = sentiment.process_text(array_of_doc_text)
+    doc_sentiments: np.array = sentiment.predict_sentiment(processed_text)
+
+    for (doc_id, doc_sentiment) in zip(array_of_doc_ids, doc_sentiments):
+        print(doc_id)
+        print(doc_sentiment)
+
+    return True

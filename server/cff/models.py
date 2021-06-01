@@ -107,14 +107,17 @@ class Document(Base):
 
         existing_doc = Document.upsert(tweet)
         if existing_doc:
-            return existing_doc.id
+            return [(existing_doc.id, False)]
 
         owner_account = Account.create_or_upsert(user, twitter_site.id)
 
         quoted_tweet = tweet["quotedTweet"]
-        quote_tweet_id = None
+        quoted_tweet_id = None
+        quoted_tweet_is_new = False
         if quoted_tweet:
-            quote_tweet_id = Document.generate_document_context_from_twitter(quoted_tweet, lookup_symbol)
+            quoted_tweet_id, quoted_tweet_is_new = Document.generate_document_context_from_twitter(
+                quoted_tweet, lookup_symbol
+            )[0]
 
         mentioned_users = tweet["mentionedUsers"]
         account_mentions = []
@@ -132,7 +135,7 @@ class Document(Base):
             "retweet_count": tweet["retweetCount"],
             "like_count": tweet["likeCount"],
             "quote_count": tweet["quoteCount"],
-            "quoted_doc_id": quote_tweet_id,
+            "quoted_doc_id": quoted_tweet_id,
             "lookup_symbol": lookup_symbol,
         }
 
@@ -179,7 +182,11 @@ class Document(Base):
         for tm in ticker_mentions:
             TickerMention(document_id=doc.id, ticker_id=tm["mention"].id, extra=tm["extra"]).save()
 
-        return doc.id
+        documents_created = [(doc.id, True)]
+        if quoted_tweet_id:
+            documents_created.append((quoted_tweet_id, quoted_tweet_is_new))
+
+        return documents_created
 
 
 class AccountMention(Base):
