@@ -1,7 +1,38 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
+import { group } from "d3";
 
 const duration = 500;
+
+const GetTopTickers = (sentiment) => {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    fetch("/getTopSentiment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ sentiment : sentiment }),
+    }).then((response) => {
+      response.json().then((data) => {
+        const toSet = [];
+        for (const ticker of data) {
+          toSet.push({
+            name : ticker.ticker,
+            group : ticker.ticker,
+            value : ticker.short_count,
+            op : (ticker.short_count / ticker.long_count),
+            colname : "level3"
+          });
+        }
+        setData(toSet);
+      });
+    });
+  }, []);
+
+  return data;
+};
 
 const TreeMapCanvas = ({ width, height, data }) => {
   const margin = { top: 0, right: 0, bottom: 0, left: 3 };
@@ -17,12 +48,18 @@ const TreeMapCanvas = ({ width, height, data }) => {
       .attr("height", innerHeight)
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
-  }, []);
 
-  useEffect(() => {
-    drawChart();
-  }, []);
-
+      if (
+        data.children[0].children.length != 0 &&
+        data.children[1].children.length != 0 &&
+        data.children[2].children.length != 0 &&
+        data.children[3].children.length != 0 &&
+        data.children[4].children.length != 0
+      ) {
+        drawChart();
+      }
+  }, [data]);
+  
   const drawChart = () => {
     var root = d3.hierarchy(data).sum(function (d) {
       return d.value;
@@ -36,17 +73,48 @@ const TreeMapCanvas = ({ width, height, data }) => {
     );
 
     var color = d3
-      .scaleOrdinal()
-      .domain(["Crypto", "Angry Sentiment", "Positive Sentiment"])
-      .range(["#99CCCC", "#99CC99", "#FF99CC"]);
+    .scaleOrdinal()
+    .domain(["Happy", "Sad", "Excited", "Angry","Fear"])
+    .range(["#99CCCC", "#99CC99", "#FF99CC", "#FF9999","#FFCC66"]);
 
-    var opacity = d3.scaleLinear().domain([10, 30]).range([0.5, 1]);
+    var opacity = d3.scaleLinear().domain([0, 2]).range([0.5, 1]);
+
+    // create a tooltip
+    var Tooltip = d3
+        .select("#treechart")
+        .append("div")
+        .style("opacity", 0)
+        .attr("class", "tooltip")
+        .style("background-color", "white")
+        .style("border", "solid")
+        .style("border-width", "2px")
+        .style("border-radius", "5px")
+        .style("padding", "5px")
+        .style("position", "absolute");
+
+    // Three function that change the tooltip when user hover / move / leave a cell
+    var mouseover = function (d) {
+      Tooltip.style("opacity", 1);
+    };
+
+    var mousemove = function (event, d) {
+      Tooltip.html(d.data.name  + "<br>" + d.value + " mentions" + "<br>" + d.data.op + " sentiment")
+      .style("left", d3.pointer(event)[0] + 80 + "px")
+      .style("top", d3.pointer(event)[1] + "px");
+    };
+
+    var mouseleave = function (d) {
+      Tooltip.style("opacity", 0);
+    };
 
     svg
       .selectAll("rect")
       .data(root.leaves())
       .enter()
       .append("rect")
+      .on("mouseover", mouseover) // What to do when hovered
+      .on("mousemove", mousemove)
+      .on("mouseleave", mouseleave)
       .attr("x", function (d) {
         return d.x0;
       })
@@ -59,12 +127,12 @@ const TreeMapCanvas = ({ width, height, data }) => {
       .attr("height", function (d) {
         return d.y1 - d.y0;
       })
-      .style("stroke", "black")
+      .style("stroke", "#222222")
       .style("fill", function (d) {
         return color(d.parent.data.name);
       })
       .style("opacity", function (d) {
-        return opacity(d.data.value);
+        return opacity(d.data.op);
       });
 
     svg
@@ -81,8 +149,10 @@ const TreeMapCanvas = ({ width, height, data }) => {
       .text(function (d) {
         return d.data.name.replace("mister_", "");
       })
-      .attr("font-size", "19px")
-      .attr("fill", "white");
+      .attr("font-size", function (d) {
+        return ((d.x1 - d.x0 < 55) || (d.y1 - d.y0 < 20)) ? "0px" : "18px";
+      })
+      .attr("fill", "#222222");
 
     svg
       .selectAll("vals")
@@ -98,8 +168,10 @@ const TreeMapCanvas = ({ width, height, data }) => {
       .text(function (d) {
         return d.data.value;
       })
-      .attr("font-size", "11px")
-      .attr("fill", "white");
+      .attr("font-size", function (d) {
+        return ((d.x1 - d.x0 < 55) || (d.y1 - d.y0 < 40)) ? "0px" : "12px";
+      })
+      .attr("fill", "#222222");
 
     svg
       .selectAll("titles")
@@ -126,7 +198,7 @@ const TreeMapCanvas = ({ width, height, data }) => {
   };
 
   return (
-    <div className="chart" id="chart">
+    <div className="treechart" id="treechart">
       <svg ref={ref}></svg>
     </div>
   );
@@ -134,6 +206,42 @@ const TreeMapCanvas = ({ width, height, data }) => {
 
 export const TreeMapPanel = () => {
   const width = 1024 - 30;
+
+  const happy = GetTopTickers("happy");
+  const sad = GetTopTickers("sad");
+  const excited = GetTopTickers("excited");
+  const angry = GetTopTickers("anger");
+  const fear = GetTopTickers("fear");
+
+  const data2 = {
+    children : [{
+      name: "Happy",
+      children: happy,
+      colname: "level2",
+    },
+    {
+      name: "Sad",
+      children: sad,
+      colname: "level2",
+    },
+    {
+      name: "Excited",
+      children: excited,
+      colname: "level2",
+    },
+    {
+      name: "Angry",
+      children: angry,
+      colname: "level2",
+    },
+    {
+      name: "Fear",
+      children: fear,
+      colname: "level2",
+    }]
+  }
+
+  console.log(data2)
 
   const data = {
     children: [
@@ -175,7 +283,7 @@ export const TreeMapPanel = () => {
 
   return (
     <div className="GraphPanal">
-      <TreeMapCanvas width={width} height={width / 1.9} data={data} />
+         <TreeMapCanvas width={width} height={width} data={data2}/>
     </div>
   );
 };
