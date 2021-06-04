@@ -19,8 +19,7 @@ import contractions
 import tensorflow_text
 
 # TODO: Make Enviromental Variable
-model = tf.keras.models.load_model("./cff/model/electra_5_19_bert")
-
+# model = tf.keras.models.load_model("./cff/model/electra_5_19_bert")
 
 def lower_case(text):
     return text.lower()
