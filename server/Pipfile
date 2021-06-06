@@ -24,7 +24,6 @@ tensorflow = "==2.5.0"
 sklearn = "*"
 tensorflow-text = "==2.5.0"
 
-
 [dev-packages]
 ipython = "*"
 line-profiler = "*"
