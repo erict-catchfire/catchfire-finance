@@ -1,4 +1,5 @@
 import json
+import operator
 import os
 from datetime import timedelta
 from typing import Optional, Union, List
@@ -10,12 +11,14 @@ from rq.decorators import job
 from sqlalchemy import asc
 
 from cff import sentiment
-from cff.models import db, Document, Site
+from cff.models import db, Document, Site, DocumentSentiment
 from cff.historical_worker import conn as hist_conn
 from cff.realtime_worker import conn as real_conn
+from cff.sentiment_worker import conn as sent_conn
 
 TEMP_DIR = "temp"
 MINIMUM_FAVES = 2
+STRONGEST_THRESHOLD = 0.4
 
 
 @job("historical", connection=hist_conn, timeout=-1)
@@ -117,7 +120,7 @@ def _get_tweet_by_ticker(lookup_symbol: Optional[str] = None, asc_or_desc=None):
     return first if first else None
 
 
-@job("sentiment", connection=hist_conn, timeout=-1)
+@job("sentiment", connection=sent_conn, timeout=-1)
 def bg_generate_sentiments(doc_ids: List[int]):
     _generate_sentiments_for_doc_ids(doc_ids)
 
@@ -138,7 +141,19 @@ def _generate_sentiments_for_doc_ids(doc_ids: List[int]):
     doc_sentiments: np.array = sentiment.predict_sentiment(processed_text)
 
     for (doc_id, doc_sentiment) in zip(array_of_doc_ids, doc_sentiments):
-        print(doc_id)
-        print(doc_sentiment)
+        sentiments = {
+            "anger": doc_sentiment[0],
+            "fear": doc_sentiment[1],
+            "joy": doc_sentiment[2],
+            "sadness": doc_sentiment[3],
+            "analytical": doc_sentiment[4],
+            "confident": doc_sentiment[5],
+            "tentative": doc_sentiment[6],
+        }
+        strongest_value = max(sentiments.items(), key=operator.itemgetter(1))[0]
+        strongest_emotion = strongest_value if sentiments[strongest_value] > STRONGEST_THRESHOLD else None
+        sentiment_map = {"strongest_emotion": strongest_emotion, "emotions": sentiments}
 
-    return True
+        DocumentSentiment(document_id=doc_id, model_version=sentiment.MODEL_FILE, sentiment=sentiment_map).save()
+
+    db.session.commit()

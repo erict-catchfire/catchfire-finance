@@ -17,14 +17,14 @@ import re
 from nltk.tokenize.toktok import ToktokTokenizer
 import contractions
 
-_MODEL_FILE = os.environ.get("MODEL_FILE")
-LOAD_MODEL = True
+MODEL_FILE = os.environ.get("MODEL_FILE")
+LOAD_MODEL = False
 
-if LOAD_MODEL and _MODEL_FILE:
+if LOAD_MODEL and MODEL_FILE:
     import nltk
     import tensorflow_text
 
-    model = tf.keras.models.load_model(f"./cff/model/{_MODEL_FILE}")
+    model = tf.keras.models.load_model(f"./cff/model/{MODEL_FILE}")
 
 
 def lower_case(text):
