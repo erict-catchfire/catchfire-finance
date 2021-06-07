@@ -83,14 +83,13 @@ def _bg_query_tweets_for_symbol(
 
     db.session.commit()
 
-    print(f"New documents: {new_doc_ids}, created.")
     if os.path.isfile(temp_file):
         os.remove(temp_file)
         print(f"Deleting temp file: {temp_file}")
     else:
         print(f"Error: {temp_file} not found.")
 
-    probably_more_tweets = len(new_doc_ids) == 500
+    probably_more_tweets = len(tweets) == 500
 
     if asc_or_desc == sqlalchemy.desc:
         if probably_more_tweets:
