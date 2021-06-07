@@ -146,36 +146,40 @@ stop_words = [
     "now",
 ]
 
+
 @main.route("/getTopSentiment", methods=["POST"])
 def get_top_sentiment():
     request_object = request.get_json()
     sentiment = request_object["sentiment"]
     ticker_array = []
     top_tickers = []
-    to_return  = []
+    to_return = []
     ticker_array_short = []
     ticker_dict_long = {}
 
-    documents_long  = db.session.query(Document) \
-                    .join(DocumentSentiment, Document.id == DocumentSentiment.document_id) \
-                    .filter(Document.posted_at > datetime.now() - timedelta(days=70)) \
-                    .filter(DocumentSentiment.model_version == "seed_emotions") \
-                    .filter(DocumentSentiment.sentiment['strongest_emotion'].astext == sentiment) \
-                    .all()
+    documents_long = (
+        db.session.query(Document)
+        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
+        .filter(Document.posted_at > datetime.now() - timedelta(days=70))
+        .filter(DocumentSentiment.model_version == "seed_emotions")
+        .filter(DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment)
+        .all()
+    )
 
-
-    documents_short = db.session.query(Document) \
-                    .join(DocumentSentiment, Document.id == DocumentSentiment.document_id) \
-                    .filter(Document.posted_at > datetime.now() - timedelta(days=65)) \
-                    .filter(DocumentSentiment.model_version == "seed_emotions") \
-                    .filter(DocumentSentiment.sentiment['strongest_emotion'].astext == sentiment) \
-                    .all()
+    documents_short = (
+        db.session.query(Document)
+        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
+        .filter(Document.posted_at > datetime.now() - timedelta(days=65))
+        .filter(DocumentSentiment.model_version == "seed_emotions")
+        .filter(DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment)
+        .all()
+    )
 
     for doc in documents_long:
         for mention in doc.ticker_mentions:
-            if (mention.ticker.symbol in ticker_dict_long) :
+            if mention.ticker.symbol in ticker_dict_long:
                 ticker_dict_long[mention.ticker.symbol] = ticker_dict_long[mention.ticker.symbol] + 1
-            else :
+            else:
                 ticker_dict_long[mention.ticker.symbol] = 1
 
     for doc in documents_short:
@@ -188,9 +192,9 @@ def get_top_sentiment():
     for tick in top_tickers:
         to_return.append(
             {
-                "ticker" : tick[0],
-                "long_count" : tick[1], 
-                "short_count" : ticker_dict_long[tick[0]], 
+                "ticker": tick[0],
+                "long_count": tick[1],
+                "short_count": ticker_dict_long[tick[0]],
             }
         )
 
@@ -203,54 +207,59 @@ def get_words():
     days = request_object["days"]
     word_array = []
     sent_array = []
-    to_return  = []
+    to_return = []
 
-    documents = db.session.query(Document).join(DocumentSentiment, Document.id == DocumentSentiment.document_id).filter(Document.posted_at > datetime.now() - timedelta(days=65)).all()
+    documents = (
+        db.session.query(Document)
+        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
+        .filter(Document.posted_at > datetime.now() - timedelta(days=65))
+        .all()
+    )
 
     for doc in documents:
         word_array = word_array + doc.contents.split()
 
-        if ("strongest_emotion" in doc.sentiments[1].sentiment) :
-            sent_array.append({
-                "words" : doc.contents.split(),
-                "sentiment" : doc.sentiments[1].sentiment['strongest_emotion']
-            })
-        else :
-            sent_array.append({
-                "words" : doc.contents.split(),
-                "sentiment" : doc.sentiments[0].sentiment['strongest_emotion']
-            })
+        if "strongest_emotion" in doc.sentiments[1].sentiment:
+            sent_array.append(
+                {"words": doc.contents.split(), "sentiment": doc.sentiments[1].sentiment["strongest_emotion"]}
+            )
+        else:
+            sent_array.append(
+                {"words": doc.contents.split(), "sentiment": doc.sentiments[0].sentiment["strongest_emotion"]}
+            )
 
     stopword_removed = [word for word in word_array if word.lower() not in stop_words]
     c = Counter(stopword_removed)
 
     top_words = c.most_common(50)
 
-    for i in range(0,len(top_words)) :
-        counter = [0,0,0,0,0]
-        for entry in sent_array :
-           if top_words[i][0] in entry['words']  :
-               if (entry['sentiment'] == "happy"):
-                   counter[0] = counter[0] + 1
-               elif (entry['sentiment'] == "sad"):
-                   counter[1] = counter[1] + 1
-               elif (entry['sentiment'] == "excited"):
-                   counter[2] = counter[2] + 1
-               elif (entry['sentiment'] == "anger"):
-                   counter[3] = counter[3] + 1
-               elif (entry['sentiment'] == "fear"):
-                   counter[4] = counter[4] + 1
-        
+    for i in range(0, len(top_words)):
+        counter = [0, 0, 0, 0, 0]
+        for entry in sent_array:
+            if top_words[i][0] in entry["words"]:
+                if entry["sentiment"] == "happy":
+                    counter[0] = counter[0] + 1
+                elif entry["sentiment"] == "sad":
+                    counter[1] = counter[1] + 1
+                elif entry["sentiment"] == "excited":
+                    counter[2] = counter[2] + 1
+                elif entry["sentiment"] == "anger":
+                    counter[3] = counter[3] + 1
+                elif entry["sentiment"] == "fear":
+                    counter[4] = counter[4] + 1
+
         max_amount = max(counter)
         max_position = counter.index(max_amount)
         sum_amount = sum(counter)
 
-        to_return.append({
-            "word" : top_words[i][0], 
-            "count" : top_words[i][1],
-            "sentiment" : max_position,
-            "amount" : (max_amount/sum_amount),
-        })
+        to_return.append(
+            {
+                "word": top_words[i][0],
+                "count": top_words[i][1],
+                "sentiment": max_position,
+                "amount": (max_amount / sum_amount),
+            }
+        )
 
     return jsonify(to_return)
 

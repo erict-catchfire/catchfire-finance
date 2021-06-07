@@ -17,8 +17,9 @@ import re
 from nltk.tokenize.toktok import ToktokTokenizer
 import contractions
 
-MODEL_FILE = os.environ.get("MODEL_FILE")
 LOAD_MODEL = False
+MODEL_FILE = os.environ.get("MODEL_FILE")
+model = None
 
 if LOAD_MODEL and MODEL_FILE:
     import nltk
@@ -176,5 +177,7 @@ def process_text(text):
 
 def predict_sentiment(string_array):
     model_input = pd.Series(string_array)
-    yhat = model.predict(model_input)
-    return np.array(yhat).tolist()
+    if model:
+        yhat = model.predict(model_input)
+        return np.array(yhat).tolist()
+    return np.array([])
