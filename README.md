@@ -38,6 +38,7 @@ Catchfire Finance Project Repository
    (optional) export FLASK_DEBUG=1
    export FLASK_APP=cff
    export DATABASE_URL='postgresql://postgres:postgres@localhost:5432/catchfire'
+   export MODEL_FILE='electra_5_19_bert'  # The model's folder name
    
    # Log in to IEX Cloud:
    export IEX_SANDBOX='<sandbox_token>'
@@ -144,7 +145,7 @@ Catchfire Finance Project Repository
 
 ### Run
    ```
-   flask run & rq-dashboard & rq worker historical --with-scheduler & rq worker realtime & --with-scheduler
+   flask run & rq-dashboard & rq worker historical & rq worker sentiment & rq worker realtime & --with-scheduler
    ```
    **To manage background tasks:**
    ```
