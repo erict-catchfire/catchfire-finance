@@ -139,7 +139,7 @@ def _generate_sentiments_for_doc_ids(doc_ids: List[int]):
     processed_text: np.array = sentiment.process_text(array_of_doc_text)
     doc_sentiments: np.array = sentiment.predict_sentiment(processed_text)
 
-    if doc_sentiments.size == 0:
+    if len(doc_sentiments) == 0:
         print(f"Model is probably not loaded; No sentiments returned.")
         return  # Do Nothing
 
