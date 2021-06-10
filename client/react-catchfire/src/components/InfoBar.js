@@ -7,7 +7,7 @@ export const InfoBar = ({ toggleFunction }) => {
 
   return (
     <div className="InfoBar">
-      <div className="textDiv">Click for more explination.</div>
+      <div className="textDiv">Click for more explanation.</div>
       <div className="radioDiv">
         <Radio toggle onClick={() => dispatch(toggleFunction)}>
           Info

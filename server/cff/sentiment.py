@@ -183,4 +183,4 @@ def predict_sentiment(string_array):
     if loaded_model:
         yhat = loaded_model.predict(model_input)
         return np.array(yhat).tolist()
-    return np.array([])
+    return np.array([]).tolist()
