@@ -1,8 +1,6 @@
-import os
-import sys
-
 # Data Science Packages
-import tensorflow as tf
+import os
+
 import numpy as np
 import pandas as pd
 
@@ -14,18 +12,19 @@ opts.indent_size = 2
 
 # NLP Packages
 import re
-from nltk.tokenize.toktok import ToktokTokenizer
 import contractions
+import tensorflow as tf
+from nltk.tokenize.toktok import ToktokTokenizer
 
-LOAD_MODEL = False
-MODEL_FILE = os.environ.get("MODEL_FILE")
-model = None
-
-if LOAD_MODEL and MODEL_FILE:
-    import nltk
-    import tensorflow_text
-
-    model = tf.keras.models.load_model(f"./cff/model/{MODEL_FILE}")
+# LOAD_MODEL = True
+# MODEL_FILE = os.environ.get("MODEL_FILE")
+#
+# if LOAD_MODEL and MODEL_FILE:
+#     print(f'Loading model...')
+#     import nltk
+#     import tensorflow_text
+#     loaded_model = tf.keras.models.load_model(f"./cff/model/{MODEL_FILE}")
+#     print(f'Loaded model: {MODEL_FILE}')
 
 
 def lower_case(text):
@@ -176,8 +175,12 @@ def process_text(text):
 
 
 def predict_sentiment(string_array):
+    from flask import current_app
+
+    loaded_model = current_app.loaded_model
+
     model_input = pd.Series(string_array)
-    if model:
-        yhat = model.predict(model_input)
+    if loaded_model:
+        yhat = loaded_model.predict(model_input)
         return np.array(yhat).tolist()
     return np.array([])

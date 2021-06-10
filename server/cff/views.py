@@ -1,15 +1,11 @@
 from flask import Blueprint, request, jsonify
-from sqlalchemy.ext.indexable import index_property
-from sqlalchemy.sql.expression import null
-from cff.models import Ticker, Document, DocumentSentiment
+from cff.models import db, Ticker, Document, DocumentSentiment
 from datetime import datetime, timedelta
 import yfinance as yf
-from cff.sentiment import predict_sentiment
-from cff.sentiment import process_text
-from sqlalchemy import text
-from cff import db
+
+# from cff.sentiment import predict_sentiment
+# from cff.sentiment import process_text
 from collections import Counter
-import json
 
 main = Blueprint("main", __name__)
 stop_words = [
@@ -264,19 +260,19 @@ def get_words():
     return jsonify(to_return)
 
 
-@main.route("/getSentiment", methods=["POST"])
-def get_sentiment():
-    request_object = request.get_json()
-    sentiment_dict = {}
-
-    strings_for_processing = request_object["strings"]
-    if not strings_for_processing:
-        return "Include valid strings for request", 400
-
-    processed_text = process_text(strings_for_processing)
-    sentiment_dict["results"] = predict_sentiment(processed_text)
-
-    return jsonify(sentiment_dict)
+# @main.route("/getSentiment", methods=["POST"])
+# def get_sentiment():
+#     request_object = request.get_json()
+#     sentiment_dict = {}
+#
+#     strings_for_processing = request_object["strings"]
+#     if not strings_for_processing:
+#         return "Include valid strings for request", 400
+#
+#     processed_text = process_text(strings_for_processing)
+#     sentiment_dict["results"] = predict_sentiment(processed_text)
+#
+#     return jsonify(sentiment_dict)
 
 
 @main.route("/getPrice", methods=["POST"])
