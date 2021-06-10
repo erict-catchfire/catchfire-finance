@@ -39,16 +39,13 @@ def twitter_seed(seed_sentiment: bool):
 
     count = 1
     for tweet in data:
-        doc_id = Document.generate_document_context_from_twitter(tweet, "seed_data")
-        doc: Document = Document.query.get(doc_id)
-        quoted_id = doc.context["quoted_doc_id"] if doc.context["quoted_doc_id"] else None
-        if seed_sentiment:
-            _seed_sentiment_posneg(doc_id)
-            _seed_sentiment_emotions(doc_id)
+        docs_created = Document.generate_document_context_from_twitter(tweet, "seed_data")
 
-            if quoted_id:
-                _seed_sentiment_posneg(quoted_id)
-                _seed_sentiment_emotions(quoted_id)
+        if seed_sentiment:
+            for doc_id, is_new in docs_created:
+                if is_new:
+                    _seed_sentiment_posneg(doc_id)
+                    _seed_sentiment_emotions(doc_id)
 
         if count % 100 == 0 and live_run:
             db.session.commit()

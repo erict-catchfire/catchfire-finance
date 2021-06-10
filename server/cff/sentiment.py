@@ -1,9 +1,10 @@
+import os
+import sys
+
 # Data Science Packages
 import tensorflow as tf
-from keras.models import load_model
 import numpy as np
 import pandas as pd
-import sys
 
 # JSON
 import jsbeautifier
@@ -13,13 +14,19 @@ opts.indent_size = 2
 
 # NLP Packages
 import re
-import nltk
 from nltk.tokenize.toktok import ToktokTokenizer
 import contractions
-import tensorflow_text
 
-# TODO: Make Enviromental Variable
-# model = tf.keras.models.load_model("./cff/model/electra_5_19_bert")
+LOAD_MODEL = False
+MODEL_FILE = os.environ.get("MODEL_FILE")
+model = None
+
+if LOAD_MODEL and MODEL_FILE:
+    import nltk
+    import tensorflow_text
+
+    model = tf.keras.models.load_model(f"./cff/model/{MODEL_FILE}")
+
 
 def lower_case(text):
     return text.lower()
@@ -170,5 +177,7 @@ def process_text(text):
 
 def predict_sentiment(string_array):
     model_input = pd.Series(string_array)
-    yhat = model.predict(model_input)
-    return np.array(yhat).tolist()
+    if model:
+        yhat = model.predict(model_input)
+        return np.array(yhat).tolist()
+    return np.array([])

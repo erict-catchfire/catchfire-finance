@@ -17,3 +17,6 @@ __pycache__
 .cache
 npm-debug.log
 yarn-error.log
+
+server/temp
+server/cff/model

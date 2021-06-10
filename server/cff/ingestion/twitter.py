@@ -1,18 +1,24 @@
 import json
+import operator
 import os
 from datetime import timedelta
-from typing import Optional, Union
+from typing import Optional, Union, List
 
+import numpy as np
 import sqlalchemy
 from rq import Queue
 from rq.decorators import job
+from sqlalchemy import asc
 
-from cff.models import db, Document, Site
+from cff import sentiment
+from cff.models import db, Document, Site, DocumentSentiment
 from cff.historical_worker import conn as hist_conn
 from cff.realtime_worker import conn as real_conn
+from cff.sentiment_worker import conn as sent_conn
 
 TEMP_DIR = "temp"
 MINIMUM_FAVES = 2
+STRONGEST_THRESHOLD = 0.4
 
 
 @job("historical", connection=hist_conn, timeout=-1)
@@ -70,19 +76,20 @@ def _bg_query_tweets_for_symbol(
 
     new_doc_ids = []
     for tweet in tweets:
-        doc_id = Document.generate_document_context_from_twitter(tweet, lookup_symbol)
-        new_doc_ids.append(doc_id)
+        docs_created = Document.generate_document_context_from_twitter(tweet, lookup_symbol)
+        for doc_id, is_new in docs_created:
+            if is_new:
+                new_doc_ids.append(doc_id)
 
     db.session.commit()
 
-    print(f"New documents: {new_doc_ids}, created.")
     if os.path.isfile(temp_file):
         os.remove(temp_file)
         print(f"Deleting temp file: {temp_file}")
     else:
         print(f"Error: {temp_file} not found.")
 
-    probably_more_tweets = len(new_doc_ids) == 500
+    probably_more_tweets = len(tweets) == 500
 
     if asc_or_desc == sqlalchemy.desc:
         if probably_more_tweets:
@@ -92,6 +99,9 @@ def _bg_query_tweets_for_symbol(
             realtime_queue.enqueue_in(timedelta(minutes=30), bg_query_realtime_by_symbol, lookup_symbol)
     elif asc_or_desc == sqlalchemy.asc and probably_more_tweets:
         bg_query_historical_by_symbol.delay(lookup_symbol)
+
+    if new_doc_ids:
+        bg_generate_sentiments.delay(new_doc_ids)
 
     return new_doc_ids
 
@@ -107,3 +117,46 @@ def _get_tweet_by_ticker(lookup_symbol: Optional[str] = None, asc_or_desc=None):
 
     first = query.first()
     return first if first else None
+
+
+@job("sentiment", connection=sent_conn, timeout=-1)
+def bg_generate_sentiments(doc_ids: List[int]):
+    _generate_sentiments_for_doc_ids(doc_ids)
+
+
+def _generate_sentiments_for_doc_ids(doc_ids: List[int]):
+    docs = (
+        db.session.query(Document.id, Document.contents)
+        .filter(Document.id.in_(doc_ids))
+        .order_by(asc(Document.id))
+        .all()
+    )
+
+    doc: Document
+    array_of_doc_ids = [doc.id for doc in docs]
+    array_of_doc_text = [doc.contents for doc in docs]
+
+    processed_text: np.array = sentiment.process_text(array_of_doc_text)
+    doc_sentiments: np.array = sentiment.predict_sentiment(processed_text)
+
+    if doc_sentiments.size == 0:
+        print(f"Model is probably not loaded; No sentiments returned.")
+        return  # Do Nothing
+
+    for (doc_id, doc_sentiment) in zip(array_of_doc_ids, doc_sentiments):
+        sentiments = {
+            "anger": doc_sentiment[0],
+            "fear": doc_sentiment[1],
+            "joy": doc_sentiment[2],
+            "sadness": doc_sentiment[3],
+            "analytical": doc_sentiment[4],
+            "confident": doc_sentiment[5],
+            "tentative": doc_sentiment[6],
+        }
+        strongest_value = max(sentiments.items(), key=operator.itemgetter(1))[0]
+        strongest_emotion = strongest_value if sentiments[strongest_value] > STRONGEST_THRESHOLD else None
+        sentiment_map = {"strongest_emotion": strongest_emotion, "emotions": sentiments}
+
+        DocumentSentiment(document_id=doc_id, model_version=sentiment.MODEL_FILE, sentiment=sentiment_map).save()
+
+    db.session.commit()
