@@ -1,13 +1,14 @@
 from flask import Blueprint, request, jsonify
-from cff.models import db, Ticker, Document, DocumentSentiment
 from datetime import datetime, timedelta
 import yfinance as yf
+
+from cff.models import db, Document, DocumentSentiment, Ticker
 
 # from cff.sentiment import predict_sentiment
 # from cff.sentiment import process_text
 from collections import Counter
 
-main = Blueprint("main", __name__)
+views = Blueprint("views", __name__)
 stop_words = [
     "&amp;",
     "It’s",
@@ -143,7 +144,7 @@ stop_words = [
 ]
 
 
-@main.route("/getTopSentiment", methods=["POST"])
+@views.route("/getTopSentiment", methods=["POST"])
 def get_top_sentiment():
     request_object = request.get_json()
     sentiment = request_object["sentiment"]
@@ -179,7 +180,7 @@ def get_top_sentiment():
                 ticker_dict_long[mention.ticker.symbol] = 1
 
     for doc in documents_short:
-        for mention in doc.ticker_mentions:
+        for mention in doc.ticker_mentionsmain:
             ticker_array_short = ticker_array_short + [mention.ticker.symbol]
 
     c = Counter(ticker_array_short)
@@ -197,7 +198,7 @@ def get_top_sentiment():
     return jsonify(to_return)
 
 
-@main.route("/getWords", methods=["POST"])
+@views.route("/getWords", methods=["POST"])
 def get_words():
     request_object = request.get_json()
     days = request_object["days"]
@@ -275,7 +276,7 @@ def get_words():
 #     return jsonify(sentiment_dict)
 
 
-@main.route("/getPrice", methods=["POST"])
+@views.route("/getPrice", methods=["POST"])
 def get_price():
     request_object = request.get_json()
     ticker_dict = {}
@@ -290,7 +291,7 @@ def get_price():
     return jsonify(ticker_dict)
 
 
-@main.route("/getTableData", methods=["POST"])
+@views.route("/getTableData", methods=["POST"])
 def get_table_data():
     ticker_dict = {}
     request_object = request.get_json()
@@ -331,7 +332,7 @@ def get_table_data():
     return jsonify(ticker_dict)
 
 
-@main.route("/getTickers", methods=["GET"])
+@views.route("/getTickers", methods=["GET"])
 def get_tickers():
     tickers = Ticker.query.all()
     ticker_dict = {}

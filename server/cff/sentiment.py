@@ -16,16 +16,6 @@ import contractions
 import tensorflow as tf
 from nltk.tokenize.toktok import ToktokTokenizer
 
-# LOAD_MODEL = True
-# MODEL_FILE = os.environ.get("MODEL_FILE")
-#
-# if LOAD_MODEL and MODEL_FILE:
-#     print(f'Loading model...')
-#     import nltk
-#     import tensorflow_text
-#     loaded_model = tf.keras.models.load_model(f"./cff/model/{MODEL_FILE}")
-#     print(f'Loaded model: {MODEL_FILE}')
-
 
 def lower_case(text):
     return text.lower()

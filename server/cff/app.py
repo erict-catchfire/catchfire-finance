@@ -1,13 +1,18 @@
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 from healthcheck import HealthCheck
 import tensorflow as tf
 
-from cff.models import db
-from cff.views import main
+from cff.views import views
+
+LOAD_MODEL = True
+loaded_model = None
 
 app = Flask(__name__)
-app.register_blueprint(main)
+app.register_blueprint(views)
 app.config.from_pyfile("config.py")
+
+MODEL_FILE = app.config.get("MODEL_FILE")
 
 IEX_TOKEN = app.config.get("IEX_TOKEN", None)
 if not IEX_TOKEN:
@@ -17,12 +22,7 @@ SQLALCHEMY_DATABASE_URI = app.config.get("SQLALCHEMY_DATABASE_URI", None)
 if not SQLALCHEMY_DATABASE_URI:
     raise ValueError("No database uri provided for catchfire-finance.")
 
-LOAD_MODEL = True
-MODEL_FILE = app.config.get("MODEL_FILE")
-global loaded_model
-
-db.app = app
-db.init_app(app)
+db = SQLAlchemy(app)
 
 from cff.cli.site import site_cli
 from cff.cli.defaults import defaults_cli
