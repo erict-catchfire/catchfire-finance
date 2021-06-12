@@ -14,7 +14,7 @@ if not IEX_TOKEN:
 
 SQLALCHEMY_DATABASE_URI = app.config.get("SQLALCHEMY_DATABASE_URI", None)
 if not SQLALCHEMY_DATABASE_URI:
-    raise ValueError("No database uri provide for catchfire-finance.")
+    raise ValueError("No database uri provided for catchfire-finance.")
 
 db.app = app
 db.init_app(app)
