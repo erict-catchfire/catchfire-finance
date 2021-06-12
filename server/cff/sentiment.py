@@ -177,7 +177,5 @@ def process_text(text):
 
 def predict_sentiment(string_array):
     model_input = pd.Series(string_array)
-    if model:
-        yhat = model.predict(model_input)
-        return np.array(yhat).tolist()
-    return np.array([])
+    yhat = model.predict(model_input)
+    return np.array(yhat).tolist()

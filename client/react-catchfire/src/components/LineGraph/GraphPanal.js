@@ -1,12 +1,21 @@
 import React, { useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  setStartEndLineGraph
-} from "../../actions/index";
+import { setStartEndLineGraph } from "../../actions/index";
 import * as d3 from "d3";
 import { values } from "d3-collection";
 
 const duration = 500;
+
+const colorNametoHex = {
+  black: "black",
+  red: "#FF3333",
+  blue: "#336699",
+  magenta: "#993366",
+  green: "#339933",
+  orange: "#FF6633",
+  pink: "#FF99CC",
+  cyan: "#99CCCC",
+};
 
 const LineChart = ({ width, height, data }) => {
   const limits = useSelector((state) => state.lineGraph);
@@ -43,196 +52,212 @@ const LineChart = ({ width, height, data }) => {
 
     const dataKeys = Object.keys(data);
 
-    if (Object.keys(data).length !== 0) {      
-      const chLines = chart
-      .selectAll(".line")
-      .each(
-        function(){ 
-          if(!dataKeys.includes(this.id)) {
-           this.remove();
-          }
+    if (Object.keys(data).length !== 0) {
+      const chLines = chart.selectAll(".line").each(function () {
+        if (!dataKeys.includes(this.id)) {
+          this.remove();
         }
-      ) 
-      const cLines = context
-      .selectAll(".line")
-      .each(
-        function(){ 
-          if(!dataKeys.includes(this.id)) {
-           this.remove();
-          }
+      });
+      const cLines = context.selectAll(".line").each(function () {
+        if (!dataKeys.includes(this.id)) {
+          this.remove();
         }
-      ) 
+      });
 
       drawChart(limits.valid, limits.start, limits.end);
     } else {
-        const chLines = chart
-        .selectAll(".line")
-        .each(
-          function(){ 
-             this.remove();
-          }
-        ) 
-        const cLines = context
-        .selectAll(".line")
-        .each(
-          function(){ 
-             this.remove();
-          }
-        )       
-  }}, [data, controlItems]);
+      const chLines = chart.selectAll(".line").each(function () {
+        this.remove();
+      });
+      const cLines = context.selectAll(".line").each(function () {
+        this.remove();
+      });
+    }
+  }, [data, controlItems]);
 
   const drawChart = (valid, start, end) => {
-     const svg = d3.select(ref.current);
-     const clip = svg
-       .append("defs")
-       .append("svg:clipPath")
-       .attr("id", "clip")
-       .append("svg:rect")
-       .attr("width", innerWidth)
-       .attr("height", innerHeight)
-       .attr("x", 0)
-       .attr("y", 0);
+    const svg = d3.select(ref.current);
+    const clip = svg
+      .append("defs")
+      .append("svg:clipPath")
+      .attr("id", "clip")
+      .append("svg:rect")
+      .attr("width", innerWidth)
+      .attr("height", innerHeight)
+      .attr("x", 0)
+      .attr("y", 0);
 
-     const chart = svg.select("g");
+    const chart = svg.select("g");
 
-     let xValues = [];
-     let yValues = [];
+    let xValues = [];
+    let yValues = [];
 
-     const dataKeys = Object.keys(data).sort();
+    let maxPrice = 0;
+    let minPrice = 0;
+    let maxPriceDate = 0;
+    let minPriceDate = 0;
 
-     dataKeys.forEach( d => {
-        xValues.push(d3.min(data[d], entry => entry.time))
-        xValues.push(d3.max(data[d], entry => entry.time))
-        yValues.push(d3.min(data[d], entry => entry.data))
-        yValues.push(d3.max(data[d], entry => entry.data))
+    let maxVolume = 0;
+    let minVolume = 0;
+    let maxVolumeDate;
+    let minVolumeDate;
+
+    const dataKeys = Object.keys(data).sort();
+
+    let dataAxisSet = false;
+    let priceAxisSet = false;
+
+    dataKeys.forEach((d) => {
+      if (data[d][0].type == "axis") {
+        dataAxisSet = true;
+        xValues.push(d3.min(data[d], (entry) => entry.time));
+        xValues.push(d3.max(data[d], (entry) => entry.time));
+        yValues.push(d3.min(data[d], (entry) => entry.data));
+        yValues.push(d3.max(data[d], (entry) => entry.data));
+      } else if (data[d][0].type == "price") {
+        priceAxisSet = true;
+        maxPrice = d3.max(data[d], (entry) => entry.data);
+        minPrice = d3.min(data[d], (entry) => entry.data);
+        maxPriceDate = d3.max(data[d], (entry) => entry.time);
+        minPriceDate = d3.min(data[d], (entry) => entry.time);
+      } else {
+        maxVolume = d3.max(data[d], (entry) => entry.data);
+        minVolume = d3.min(data[d], (entry) => entry.data);
+        maxVolumeDate = d3.max(data[d], (entry) => entry.time);
+        minVolumeDate = d3.min(data[d], (entry) => entry.time);
       }
-     )
-     
-     const minX = d3.min(xValues);
-     const maxX = d3.max(xValues);
-     const minY = d3.min(yValues);
-     const maxY = d3.max(yValues);
+    });
 
-     const xScale = d3
-       .scaleTime()
-       .domain([minX, maxX])
-       .range([0, innerWidth]);
+    if (!dataAxisSet) {
+      if (!priceAxisSet) {
+        yValues.push(maxVolume);
+        yValues.push(minVolume);
+        xValues.push(maxVolumeDate);
+        xValues.push(minVolumeDate);
+      } else {
+        yValues.push(maxPrice);
+        yValues.push(minPrice);
+        xValues.push(maxPriceDate);
+        xValues.push(minPriceDate);
+      }
+    }
 
-     const xScale2 = d3
-       .scaleTime()
-       .domain([minX, maxX])
-       .range([0, innerWidth]);
+    const minX = d3.min(xValues);
+    const maxX = d3.max(xValues);
+    const minY = d3.min(yValues);
+    const maxY = d3.max(yValues);
 
-     const yScale = d3
-       .scaleLinear()
-       .domain([minY, maxY])
-       .range([innerHeight, 0]);
+    if (start < minX) start = minX;
 
-     const yScale2 = d3
-       .scaleLinear()
-       .domain([minY, maxY])
-       .range([innerHeight2, 0]);
+    if (end > maxX) end = maxX;
 
-     svg.select(".context").select(".brush").remove();
+    const xScale = d3.scaleTime().domain([minX, maxX]).range([0, innerWidth]);
+    const xScale2 = d3.scaleTime().domain([minX, maxX]).range([0, innerWidth]);
 
-     svg
-       .append("g")
-       .attr("class", "context")
-       .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+    const yScale = d3.scaleLinear().domain([minY, maxY]).range([innerHeight, 0]);
+    const yScale2 = d3.scaleLinear().domain([minY, maxY]).range([innerHeight2, 0]);
 
-     const context = svg.select(".context");
+    const yScalePrice = d3.scaleLinear().domain([minPrice, maxPrice]).range([innerHeight, 0]);
+    const yScalePrice2 = d3.scaleLinear().domain([minPrice, maxPrice]).range([innerHeight2, 0]);
 
-     const yAxis = d3.axisLeft().ticks(5).scale(yScale);
-     chart
-       .selectAll(".y.axis")
-       .data([null])
-       .join("g")
-       .classed("y axis", true)
-       .attr("transform", "translate(0,0)")
-       .transition()
-       .duration(duration)
-       .call(yAxis);
+    const yScaleVolume = d3.scaleLinear().domain([minVolume, maxVolume]).range([innerHeight, 0]);
+    const yScaleVolume2 = d3.scaleLinear().domain([minVolume, maxVolume]).range([innerHeight2, 0]);
 
-     const xAxis = d3.axisBottom().scale(xScale);
-     chart
-       .selectAll(".x.axis")
-       .data([null])
-       .join("g")
-       .classed("x axis", true)
-       .attr("transform", "translate(0," + innerHeight + ")")
-       .transition()
-       .duration(duration)
-       .call(xAxis);
+    svg.select(".context").select(".brush").remove();
 
-     const xAxis2 = d3.axisBottom().scale(xScale2);
-     context
-       .selectAll(".x.axis")
-       .data([null])
-       .join("g")
-       .classed("x axis", true)
-       .attr("transform", "translate(0," + innerHeight2 + ")")
-       .transition()
-       .duration(duration)
-       .call(xAxis2);
+    svg
+      .append("g")
+      .attr("class", "context")
+      .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
 
-     const brushed = (event, d) => {
-       const extent = event.selection;
+    const context = svg.select(".context");
 
-       dispatch(
-         setStartEndLineGraph(
-           xScale2.invert(extent[0]),
-           xScale2.invert(extent[1])
-         )
-       );
+    const yAxis = d3.axisLeft().ticks(5).scale(yScale);
+    chart
+      .selectAll(".y.axis")
+      .data([null])
+      .join("g")
+      .classed("y axis", true)
+      .attr("transform", "translate(0,0)")
+      .transition()
+      .duration(duration)
+      .call(yAxis);
 
-       xScale.domain([xScale2.invert(extent[0]), xScale2.invert(extent[1])]);
-       chart
-         .selectAll(".x.axis")
-         .transition()
-         .duration(duration / 10)
-         .call(d3.axisBottom(xScale));
+    const xAxis = d3.axisBottom().scale(xScale);
+    chart
+      .selectAll(".x.axis")
+      .data([null])
+      .join("g")
+      .classed("x axis", true)
+      .attr("transform", "translate(0," + innerHeight + ")")
+      .transition()
+      .duration(duration)
+      .call(xAxis);
 
-       chart
-         .selectAll(".line")
-         .transition()
-         .attr("clip-path", "url(#clip)")
-         .duration(duration / 10)
-         .attr(
-           "d",
-           d3
-             .line()
-             .x((d) => xScale(d.time))
-             .y((d) => yScale(d.data))
-         );
-     };
+    const xAxis2 = d3.axisBottom().scale(xScale2);
+    context
+      .selectAll(".x.axis")
+      .data([null])
+      .join("g")
+      .classed("x axis", true)
+      .attr("transform", "translate(0," + innerHeight2 + ")")
+      .transition()
+      .duration(duration)
+      .call(xAxis2);
 
-     const brush = d3
-       .brushX()
-       .extent([
-         [0, -2],
-         [innerWidth, innerHeight2+2],
-       ])
-       .on("brush end", brushed);
+    const brushed = (event, d) => {
+      const extent = event.selection;
 
-     if (valid) {
-       context
-         .append("g")
-         .attr("class", "brush")
-         .call(brush)
-         .call(brush.move, [xScale2(start), xScale2(end)]);
-     } else {
-       context
-         .append("g")
-         .attr("class", "brush")
-         .call(brush)
-         .call(brush.move, xScale.range());
-     }
+      dispatch(setStartEndLineGraph(xScale2.invert(extent[0]), xScale2.invert(extent[1])));
 
-     function update(data) {
-      const u = chart
-         .selectAll(".line")
-         .data(data)
-         .attr("clip-path", "url(#clip)");
+      xScale.domain([xScale2.invert(extent[0]), xScale2.invert(extent[1])]);
+      chart
+        .selectAll(".x.axis")
+        .transition()
+        .duration(duration / 10)
+        .call(d3.axisBottom(xScale));
+
+      chart
+        .selectAll(".line")
+        .transition()
+        .attr("clip-path", "url(#clip)")
+        .duration(duration / 10)
+        .attr(
+          "d",
+          d3
+            .line()
+            .x((d) => xScale(d.time))
+            .y((d) => {
+              if (d.type == "axis") return yScale(d.data);
+              else if (d.type == "price") {
+                return yScalePrice(d.data);
+              } else {
+                return yScaleVolume(d.data);
+              }
+            })
+        );
+    };
+
+    const brush = d3
+      .brushX()
+      .extent([
+        [0, -2],
+        [innerWidth, innerHeight2 + 2],
+      ])
+      .on("brush end", brushed);
+
+    if (valid) {
+      context
+        .append("g")
+        .attr("class", "brush")
+        .call(brush)
+        .call(brush.move, [xScale2(start), xScale2(end)]);
+    } else {
+      context.append("g").attr("class", "brush").call(brush).call(brush.move, xScale.range());
+    }
+
+    function update(data) {
+      const u = chart.selectAll(".line").data(data).attr("clip-path", "url(#clip)");
 
       u.enter()
         .append("path")
@@ -246,17 +271,22 @@ const LineChart = ({ width, height, data }) => {
           d3
             .line()
             .x((d) => xScale(d.time))
-            .y((d) => yScale(d.data))
+            .y((d) => {
+              if (d.type == "axis") return yScale(d.data);
+              else if (d.type == "price") {
+                return yScalePrice(d.data);
+              } else {
+                return yScaleVolume(d.data);
+              }
+            })
         )
-        .attr("stroke", (d) => controlItems[d.id].color)
+        .attr("stroke", (d) => (controlItems[d.id] == null ? "white" : colorNametoHex[controlItems[d.id].color]))
         .style("stroke-width", 2)
         .style("fill", "none");
-     }
+    }
 
     function updateContext(data) {
-      const c = context
-        .selectAll(".line")
-        .data(data);
+      const c = context.selectAll(".line").data(data);
 
       c.enter()
         .append("path")
@@ -270,20 +300,25 @@ const LineChart = ({ width, height, data }) => {
           d3
             .line()
             .x((d) => xScale2(d.time))
-            .y((d) => yScale2(d.data))
+            .y((d) => {
+              if (d.type == "axis") return yScale2(d.data);
+              else if (d.type == "price") {
+                return yScalePrice2(d.data);
+              } else {
+                return yScaleVolume2(d.data);
+              }
+            })
         )
-        .attr("stroke", (d) => controlItems[d.id].color)
+        .attr("stroke", (d) => (controlItems[d.id] == null ? "white" : colorNametoHex[controlItems[d.id].color]))
         .style("stroke-width", 1)
         .style("fill", "none");
     }
 
-    update(values(data))
-    updateContext(values(data))
+    update(values(data));
+    updateContext(values(data));
 
     // Need to always clip at the end for some reason.
-    chart
-    .selectAll(".line")
-    .attr("clip-path", "url(#clip)")  
+    chart.selectAll(".line").attr("clip-path", "url(#clip)");
   };
 
   return (
@@ -302,11 +337,7 @@ export const GraphPanal = () => {
 
   return (
     <div className="GraphPanal">
-      <LineChart
-        width={width}
-        height={width / 1.9}
-        data={dataItems}
-      />
+      <LineChart width={width} height={width / 1.9} data={dataItems} />
     </div>
   );
 };
