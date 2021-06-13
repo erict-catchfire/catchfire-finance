@@ -398,7 +398,7 @@ def get_words():
         .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
         .filter(DocumentSentiment.model_version == "electra_5_19_bert")
         .filter(Document.posted_at > datetime.now() - timedelta(days=days))
-        .filter(DocumentSentiment.sentiment["strongest_emotion"].astext == "analytical")
+        .filter(DocumentSentiment.sentiment["strongest_emotion"].astext == "none")
         .all()
     )
 
