@@ -213,8 +213,8 @@ def get_sentiment_timeseries():
             .order_by(text("m desc"))
         )
 
-    for doc in data:
-        to_return.append({"date": doc[0], "amount": doc[1]})
+    for date, amount in data:
+        to_return.append({"date": date, "amount": amount})
 
     return jsonify(to_return)
 
