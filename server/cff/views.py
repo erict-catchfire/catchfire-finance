@@ -187,7 +187,7 @@ def get_sentiment_timeseries():
 
     to_return = []
 
-    ticker_id = db.session.query(Ticker).filter(Ticker.symbol == ticker).all()[0].id
+    ticker_id = db.session.query(Ticker).filter(Ticker.symbol == ticker).first().id
 
     if sentiment == "all":
         data = (
