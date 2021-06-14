@@ -1,21 +1,22 @@
-from flask import Blueprint, request, jsonify
-from sqlalchemy.ext.indexable import index_property
-from sqlalchemy.sql.expression import null
-from cff.models import Ticker, Document, DocumentSentiment, TickerMention
-from datetime import datetime, timedelta
-import yfinance as yf
-from cff.sentiment import predict_sentiment
-from cff.sentiment import process_text
-from sqlalchemy import text, func
-from cff import db
+import operator
+import re
 from collections import Counter
-import json
+from datetime import datetime, timedelta
+from flask import Blueprint, request, jsonify
+from sqlalchemy import text, func, desc
+import yfinance as yf
 import pyEX as px
-from cff import config
-import pandas as pd
 
+from cff import config
+from cff.sentiment import predict_sentiment, process_text
+from cff.models import db, Ticker, Document, DocumentSentiment, TickerMention
+
+MODEL_FILE = config.MODEL_FILE
+iex = px.Client(api_token=config.IEX_TOKEN, version=config.IEX_ENV)
 main = Blueprint("main", __name__)
+
 stop_words = [
+    "&amp",
     "&amp;",
     "It’s",
     "#",
@@ -156,7 +157,6 @@ def get_price_timeseries():
     ticker = request_object["ticker"]
     length = request_object["length"]
 
-    iex = px.Client(api_token=config.IEX_TOKEN, version=config.IEX_ENV)
     data = iex.chartDF(ticker, closeOnly=True, timeframe="1y").reset_index()
 
     data["date"] = data["date"].dt.strftime("%Y-%m-%d")
@@ -170,7 +170,6 @@ def get_volume_timeseries():
     ticker = request_object["ticker"]
     length = request_object["length"]
 
-    iex = px.Client(api_token=config.IEX_TOKEN, version=config.IEX_ENV)
     data = iex.chartDF(ticker, closeOnly=True, timeframe="1y").reset_index()
 
     data["date"] = data["date"].dt.strftime("%Y-%m-%d")
@@ -189,81 +188,25 @@ def get_sentiment_timeseries():
 
     ticker_id = db.session.query(Ticker).filter(Ticker.symbol == ticker).first().id
 
-    if sentiment == "all":
-        data = (
-            db.session.query(func.date_trunc("hour", Document.posted_at).label("m"), func.count(Document.posted_at))
-            .join(TickerMention, Document.id == TickerMention.document_id)
-            .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
-            .filter(TickerMention.ticker_id == ticker_id)
-            .filter(DocumentSentiment.model_version == "electra_5_19_bert")
-            .filter(Document.posted_at > datetime.now() - timedelta(days=length))
-            .group_by("m")
-            .order_by(text("m desc"))
+    time_series_query = (
+        db.session.query(func.date_trunc("hour", Document.posted_at).label("m"), func.count(Document.posted_at))
+        .join(TickerMention, Document.id == TickerMention.document_id)
+        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
+        .filter(TickerMention.ticker_id == ticker_id)
+        .filter(DocumentSentiment.model_version == MODEL_FILE)
+        .filter(Document.posted_at > datetime.now() - timedelta(days=length))
+        .group_by("m")
+        .order_by(text("m desc"))
+    )
+    if sentiment != "all":
+        time_series_query = time_series_query.filter(
+            DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment
         )
-    else:
-        data = (
-            db.session.query(func.date_trunc("hour", Document.posted_at).label("m"), func.count(Document.posted_at))
-            .join(TickerMention, Document.id == TickerMention.document_id)
-            .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
-            .filter(TickerMention.ticker_id == ticker_id)
-            .filter(DocumentSentiment.model_version == "electra_5_19_bert")
-            .filter(DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment)
-            .filter(Document.posted_at > datetime.now() - timedelta(days=length))
-            .group_by("m")
-            .order_by(text("m desc"))
-        )
+
+    data = time_series_query.all()
 
     for date, amount in data:
         to_return.append({"date": date, "amount": amount})
-
-    return jsonify(to_return)
-
-
-@main.route("/getTopSentimentAll", methods=["POST"])
-def get_top_sentiment_all():
-    top_tickers = []
-    to_return = []
-    ticker_array_short = []
-    ticker_dict_long = {}
-
-    documents_long = (
-        db.session.query(Document)
-        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
-        .filter(Document.posted_at > datetime.now() - timedelta(days=31))
-        .filter(DocumentSentiment.model_version == "electra_5_19_bert")
-        .all()
-    )
-
-    documents_short = (
-        db.session.query(Document)
-        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
-        .filter(Document.posted_at > datetime.now() - timedelta(days=1))
-        .filter(DocumentSentiment.model_version == "electra_5_19_bert")
-        .all()
-    )
-
-    for doc in documents_long:
-        for mention in doc.ticker_mentions:
-            if mention.ticker.symbol in ticker_dict_long:
-                ticker_dict_long[mention.ticker.symbol] = ticker_dict_long[mention.ticker.symbol] + 1
-            else:
-                ticker_dict_long[mention.ticker.symbol] = 1
-
-    for doc in documents_short:
-        for mention in doc.ticker_mentions:
-            ticker_array_short = ticker_array_short + [mention.ticker.symbol]
-
-    c = Counter(ticker_array_short)
-    top_tickers = c.most_common(10)
-
-    for tick in top_tickers:
-        to_return.append(
-            {
-                "ticker": tick[0],
-                "long_count": ticker_dict_long[tick[0]],
-                "short_count": tick[1],
-            }
-        )
 
     return jsonify(to_return)
 
@@ -272,50 +215,50 @@ def get_top_sentiment_all():
 def get_top_sentiment():
     request_object = request.get_json()
     sentiment = request_object["sentiment"]
-    ticker_array = []
-    top_tickers = []
     to_return = []
-    ticker_array_short = []
-    ticker_dict_long = {}
 
-    documents_long = (
-        db.session.query(Document)
+    long_counts_query = (
+        db.session.query(Ticker.symbol, func.count(Ticker.symbol))
+        .join(TickerMention, TickerMention.ticker_id == Ticker.id)
+        .join(Document, Document.id == TickerMention.document_id)
         .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
         .filter(Document.posted_at > datetime.now() - timedelta(days=31))
-        .filter(DocumentSentiment.model_version == "electra_5_19_bert")
-        .filter(DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment)
-        .all()
+        .filter(DocumentSentiment.model_version == MODEL_FILE)
+        .group_by(Ticker.symbol)
+        .order_by(desc(func.count(Ticker.symbol)))
     )
 
-    documents_short = (
-        db.session.query(Document)
+    short_counts_query = (
+        db.session.query(Ticker.symbol, func.count(Ticker.symbol))
+        .join(TickerMention, TickerMention.ticker_id == Ticker.id)
+        .join(Document, Document.id == TickerMention.document_id)
         .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
-        .filter(Document.posted_at > datetime.now() - timedelta(days=7))
-        .filter(DocumentSentiment.model_version == "electra_5_19_bert")
-        .filter(DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment)
-        .all()
+        .filter(Document.posted_at > datetime.now() - timedelta(days=1))
+        .filter(DocumentSentiment.model_version == MODEL_FILE)
+        .group_by(Ticker.symbol)
+        .order_by(desc(func.count(Ticker.symbol)))
     )
 
-    for doc in documents_long:
-        for mention in doc.ticker_mentions:
-            if mention.ticker.symbol in ticker_dict_long:
-                ticker_dict_long[mention.ticker.symbol] = ticker_dict_long[mention.ticker.symbol] + 1
-            else:
-                ticker_dict_long[mention.ticker.symbol] = 1
+    if sentiment != "All":
+        long_counts_query = long_counts_query.filter(
+            DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment
+        )
+        short_counts_query = short_counts_query.filter(
+            DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment
+        )
 
-    for doc in documents_short:
-        for mention in doc.ticker_mentions:
-            ticker_array_short = ticker_array_short + [mention.ticker.symbol]
+    short_counts_query = short_counts_query.limit(10)
 
-    c = Counter(ticker_array_short)
-    top_tickers = c.most_common(10)
+    document_long_counts = long_counts_query.all()
+    document_short_counts = short_counts_query.all()
+    ticker_dict_long = {ticker: count for (ticker, count) in document_long_counts}
 
-    for tick in top_tickers:
+    for tick, count in document_short_counts:
         to_return.append(
             {
-                "ticker": tick[0],
-                "long_count": ticker_dict_long[tick[0]],
-                "short_count": tick[1],
+                "ticker": tick,
+                "long_count": ticker_dict_long[tick],
+                "short_count": count,
             }
         )
 
@@ -326,157 +269,64 @@ def get_top_sentiment():
 def get_words():
     request_object = request.get_json()
     days = request_object["days"]
-    word_array = []
-    sent_array = []
     to_return = []
 
-    joy_documents = (
-        db.session.query(Document)
-        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
-        .filter(DocumentSentiment.model_version == "electra_5_19_bert")
+    # TODO: This is gross; Do this less bad.
+    words_by_sentiment = (
+        db.session.query(
+            DocumentSentiment.sentiment["strongest_emotion"].astext,
+            func.string_to_array(
+                func.string_agg(
+                    func.array_to_string(func.regexp_split_to_array(Document.contents, "[\\s,]+"), ","), ","
+                ),
+                ",",
+            ),
+        )
+        .join(Document, Document.id == DocumentSentiment.document_id)
         .filter(Document.posted_at > datetime.now() - timedelta(days=days))
-        .filter(DocumentSentiment.sentiment["strongest_emotion"].astext == "joy")
+        .filter(DocumentSentiment.model_version == MODEL_FILE)
+        .group_by(DocumentSentiment.sentiment["strongest_emotion"].astext)
         .all()
     )
 
-    fear_documents = (
-        db.session.query(Document)
-        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
-        .filter(DocumentSentiment.model_version == "electra_5_19_bert")
-        .filter(Document.posted_at > datetime.now() - timedelta(days=days))
-        .filter(DocumentSentiment.sentiment["strongest_emotion"].astext == "fear")
-        .all()
-    )
+    word_array = []
+    sentiment_word_map = {}
+    for sentiment, array_of_words in words_by_sentiment:
+        trimmed_words = []
+        for word in array_of_words:
+            stripped_word = re.sub("[.,;&?!]", "", word)
+            if stripped_word.lower() not in stop_words:
+                trimmed_words.append(stripped_word)
+        sentiment_word_map[sentiment] = trimmed_words
+        word_array = word_array + trimmed_words
 
-    anger_documents = (
-        db.session.query(Document)
-        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
-        .filter(DocumentSentiment.model_version == "electra_5_19_bert")
-        .filter(Document.posted_at > datetime.now() - timedelta(days=days))
-        .filter(DocumentSentiment.sentiment["strongest_emotion"].astext == "anger")
-        .all()
-    )
-
-    sadness_documents = (
-        db.session.query(Document)
-        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
-        .filter(DocumentSentiment.model_version == "electra_5_19_bert")
-        .filter(Document.posted_at > datetime.now() - timedelta(days=days))
-        .filter(DocumentSentiment.sentiment["strongest_emotion"].astext == "sadness")
-        .all()
-    )
-
-    confident_documents = (
-        db.session.query(Document)
-        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
-        .filter(DocumentSentiment.model_version == "electra_5_19_bert")
-        .filter(Document.posted_at > datetime.now() - timedelta(days=days))
-        .filter(DocumentSentiment.sentiment["strongest_emotion"].astext == "confident")
-        .all()
-    )
-
-    tentative_documents = (
-        db.session.query(Document)
-        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
-        .filter(DocumentSentiment.model_version == "electra_5_19_bert")
-        .filter(Document.posted_at > datetime.now() - timedelta(days=days))
-        .filter(DocumentSentiment.sentiment["strongest_emotion"].astext == "tentative")
-        .all()
-    )
-
-    analytical_documents = (
-        db.session.query(Document)
-        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
-        .filter(DocumentSentiment.model_version == "electra_5_19_bert")
-        .filter(Document.posted_at > datetime.now() - timedelta(days=days))
-        .filter(DocumentSentiment.sentiment["strongest_emotion"].astext == "analytical")
-        .all()
-    )
-
-    null_documents = (
-        db.session.query(Document)
-        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
-        .filter(DocumentSentiment.model_version == "electra_5_19_bert")
-        .filter(Document.posted_at > datetime.now() - timedelta(days=days))
-        .filter(DocumentSentiment.sentiment["strongest_emotion"].astext == "none")
-        .all()
-    )
-
-    print(
-        len(joy_documents),
-        len(fear_documents),
-        len(anger_documents),
-        len(sadness_documents),
-        len(confident_documents),
-        len(tentative_documents),
-        len(analytical_documents),
-        len(null_documents),
-    )
-
-    for doc in joy_documents:
-        word_array = word_array + doc.contents.lower().split()
-        sent_array.append({"words": doc.contents.lower().split(), "sentiment": "joy"})
-    for doc in fear_documents:
-        word_array = word_array + doc.contents.lower().split()
-        sent_array.append({"words": doc.contents.lower().split(), "sentiment": "fear"})
-    for doc in anger_documents:
-        word_array = word_array + doc.contents.lower().split()
-        sent_array.append({"words": doc.contents.lower().split(), "sentiment": "anger"})
-    for doc in sadness_documents:
-        word_array = word_array + doc.contents.lower().split()
-        sent_array.append({"words": doc.contents.lower().split(), "sentiment": "sadness"})
-    for doc in confident_documents:
-        word_array = word_array + doc.contents.lower().split()
-        sent_array.append({"words": doc.contents.lower().split(), "sentiment": "confident"})
-    for doc in tentative_documents:
-        word_array = word_array + doc.contents.lower().split()
-        sent_array.append({"words": doc.contents.lower().split(), "sentiment": "tentative"})
-    for doc in analytical_documents:
-        word_array = word_array + doc.contents.lower().split()
-        sent_array.append({"words": doc.contents.lower().split(), "sentiment": "analytical"})
-    for doc in null_documents:
-        word_array = word_array + doc.contents.lower().split()
-        sent_array.append({"words": doc.contents.lower().split(), "sentiment": "none"})
-
-    stopword_removed = [word for word in word_array if word.lower() not in stop_words]
-    c = Counter(stopword_removed)
-
+    c = Counter(word_array)
     top_words = c.most_common(50)
 
-    for i in range(0, len(top_words)):
-        counter = [0, 0, 0, 0, 0, 0, 0, 0]
-        for entry in sent_array:
-            if top_words[i][0] in entry["words"]:
-                if entry["sentiment"] == "joy":
-                    counter[0] = counter[0] + 1
-                elif entry["sentiment"] == "fear":
-                    counter[1] = counter[1] + 1
-                elif entry["sentiment"] == "anger":
-                    counter[2] = counter[2] + 1
-                elif entry["sentiment"] == "sadness":
-                    counter[3] = counter[3] + 1
-                elif entry["sentiment"] == "confident":
-                    counter[4] = counter[4] + 1
-                elif entry["sentiment"] == "tentative":
-                    counter[5] = counter[5] + 1
-                elif entry["sentiment"] == "analytical":
-                    counter[6] = counter[6] + 1
-                elif entry["sentiment"] == "none":
-                    counter[7] = counter[7] + 1
-
-        max_amount = max(counter)
-        max_position = counter.index(max_amount)
-        sum_amount = sum(counter)
-
+    for top_word, top_count in top_words:
+        sentiment_counts = {
+            "joy": 0,
+            "fear": 0,
+            "anger": 0,
+            "sadness": 0,
+            "confident": 0,
+            "tentative": 0,
+            "analytical": 0,
+            "none": 0,
+        }
+        for sentiment, words in sentiment_word_map.items():
+            if top_word in words and sentiment:
+                sentiment_counts[sentiment] += 1
+        max_sentiment = max(sentiment_counts.items(), key=operator.itemgetter(1))[0]
+        sum_amount = sum(sentiment_counts.values())
         to_return.append(
             {
-                "word": top_words[i][0],
-                "count": top_words[i][1],
-                "sentiment": max_position,
-                "amount": (max_amount / sum_amount),
+                "word": top_word,
+                "count": top_count,
+                "sentiment": max_sentiment,
+                "amount": (sentiment_counts[max_sentiment] / sum_amount) if sum_amount > 0 else 0,
             }
         )
-
     return jsonify(to_return)
 
 

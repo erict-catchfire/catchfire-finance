@@ -11,7 +11,7 @@ export const Header = ({ logoWidth, logoHeight }) => {
   return (
     <div className="Header">
       <div style={{ paddingTop: "1.5%" }}>
-        <img className="img-responsive" class="img-responsive" src={logo} alt="logo"></img>
+        <img className="img-responsive" src={logo} alt="logo"/>
       </div>
       <div className="Searchbar">
         <Searchbar />

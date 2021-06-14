@@ -9,6 +9,8 @@ import pandas as pd
 # JSON
 import jsbeautifier
 
+from cff import config
+
 opts = jsbeautifier.default_options()
 opts.indent_size = 2
 
@@ -18,7 +20,7 @@ from nltk.tokenize.toktok import ToktokTokenizer
 import contractions
 
 LOAD_MODEL = False
-MODEL_FILE = os.environ.get("MODEL_FILE")
+MODEL_FILE = config.MODEL_FILE
 model = None
 
 if LOAD_MODEL and MODEL_FILE:
