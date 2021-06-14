@@ -12,7 +12,7 @@ const GetWords = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ days: 0 }),
+      body: JSON.stringify({ days: 5 }),
     }).then((response) => {
       response.json().then((data) => {
         const toSet = [];
@@ -21,7 +21,7 @@ const GetWords = () => {
             word: word.word,
             count: word.count,
             sentiment: word.sentiment,
-            amount: word.amount
+            amount: word.amount,
           });
         }
         setData(toSet);
@@ -31,13 +31,6 @@ const GetWords = () => {
 
   return data;
 };
-
-//to_return.append({
-//  "word" : top_words[i][0], 
-//  "count" : top_words[i][1],
-//  "sentiment" : max_position,
-//  "amount" : (max_amount/sum_amount),
-//})
 
 const WordCloudCanvas = ({ width, height, data }) => {
   const margin = { top: 15, right: 25, bottom: 100, left: 25 };
@@ -61,22 +54,29 @@ const WordCloudCanvas = ({ width, height, data }) => {
   const drawChart = () => {
     const svg = d3.select(ref.current).append("svg").attr("width", width).attr("height", height);
 
-    const maxAmount = Math.max.apply(Math, data.map((o) => o.amount))
-    const maxCount = Math.max.apply(Math, data.map((o) => o.count))
+    const maxAmount = Math.max.apply(
+      Math,
+      data.map((o) => o.amount)
+    );
+    const maxCount = Math.max.apply(
+      Math,
+      data.map((o) => o.count)
+    );
 
-    const size = d3.scaleSqrt().domain([0, maxCount]).range([7, 90]);
+    // TODO: Limit by height/50
+    const size = d3.scaleSqrt().domain([0, maxCount]).range([7, 80]);
 
     const opacity = d3.scaleLinear().domain([0, maxAmount]).range([0, 1]);
 
     var color = d3
       .scaleOrdinal()
-      .domain([0,4])
-      .range(["#99CCCC", "#99CC99", "#FF99CC", "#FF9999","#FFCC66"]);
+      .domain([0, 7])
+      .range(["#FF3333", "#336699", "#993366", "#339933", "#FF6633", "#FF99CC", "#99CCCC", "#333333"]);
 
     var sentText = d3
       .scaleOrdinal()
-      .domain([0,4])
-      .range(["Happy", "Sad", "Excited", "Anger","Fear"]);
+      .domain([0, 7])
+      .range(["Joy", "Fear", "Anger", "Sadness", "Confident", "Tentative", "Analytical", "None"]);
 
     // create a tooltip
     var Tooltip = d3
@@ -96,7 +96,7 @@ const WordCloudCanvas = ({ width, height, data }) => {
       Tooltip.style("opacity", 1);
     };
     var mousemove = function (event, d) {
-      Tooltip.html(d.word  + "<br>" + d.count + " mentions" + "<br>" + sentText(d.sentiment) + " sentiment")
+      Tooltip.html(d.word + "<br>" + d.count + " mentions" + "<br>" + sentText(d.sentiment) + " sentiment")
         .style("left", d3.pointer(event)[0] + 20 + "px")
         .style("top", d3.pointer(event)[1] + "px");
     };
@@ -112,14 +112,17 @@ const WordCloudCanvas = ({ width, height, data }) => {
       .data(data)
       .enter()
       .append("g")
-      .classed("circle", true)
+      .classed("circle", true);
 
-    node.append("circle")
+    node
+      .append("circle")
       .attr("class", "node")
       .attr("r", function (d) {
         return size(d.count);
       })
-      .style("fill", function(d){ return color(d.sentiment)})
+      .style("fill", function (d) {
+        return color(d.sentiment);
+      })
       .style("fill-opacity", (d) => opacity(d.amount))
       .on("mouseover", mouseover) // What to do when hovered
       .on("mousemove", mousemove)
@@ -134,19 +137,18 @@ const WordCloudCanvas = ({ width, height, data }) => {
 
     node
       .append("text")
-      .attr('alignment-baseline', 'middle')
-      .attr('fill-opacity', 1)
-      .attr('fill', "#222222")
-      .attr('stroke-width', 0)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', function(d) {
+      .attr("alignment-baseline", "middle")
+      .attr("fill-opacity", 1)
+      .attr("fill", "#222222")
+      .attr("stroke-width", 0)
+      .attr("text-anchor", "middle")
+      .attr("font-size", function (d) {
         return size(d.count) / ((size(d.count) * 9) / 100);
       })
-      .attr('dy', function(d) {
-        return size(d.count) / ((size(d.count) * 25) / 100) ;
+      .attr("dy", function (d) {
+        return size(d.count) / ((size(d.count) * 25) / 100);
       })
-      .text(d => d.word)
-
+      .text((d) => d.word);
 
     // Features of the forces applied to the nodes:
     //const simulation = d3.forceSimulation()
@@ -195,13 +197,14 @@ const WordCloudCanvas = ({ width, height, data }) => {
       )
       .on("tick", function (d) {
         svg.selectAll("text").attr("transform", (d) => "translate(" + d.x + "," + d.y + ")");
-        svg.selectAll("circle")
-                  .attr("cx", function (d) {
-                    return d.x;
-                  })
-                  .attr("cy", function (d) {
-                    return d.y;
-                  });        
+        svg
+          .selectAll("circle")
+          .attr("cx", function (d) {
+            return d.x;
+          })
+          .attr("cy", function (d) {
+            return d.y;
+          });
       });
 
     // What happens when a circle is dragged?

@@ -29,7 +29,7 @@ const LineChart = ({ width, height, data}) => {
   }, [])
 
   useEffect(() => {
-    if (data != null)
+    if (data !== null)
       drawChart();
   }, [data])
 
@@ -56,7 +56,7 @@ const LineChart = ({ width, height, data}) => {
 
 
       const yAxis = d3.axisLeft().ticks(5).scale(yScale);
-      chart 
+      chart
         .selectAll(".y.axis")
         .data([null])
         .join("g")
@@ -67,7 +67,7 @@ const LineChart = ({ width, height, data}) => {
         .call(yAxis)
 
       const xAxis = d3.axisBottom().scale(xScale);
-      chart 
+      chart
         .selectAll(".x.axis")
         .data([null])
         .join("g")
@@ -119,7 +119,7 @@ export const GraphPanal = () => {
       <LineChart
         width={width}
         height={width / 1.9}
-        data={(dataItems.length == 0) ? null : dataItems[dataKeys[0]]}
+        data={(dataItems.length === 0) ? null : dataItems[dataKeys[0]]}
       />
     </div>
   );

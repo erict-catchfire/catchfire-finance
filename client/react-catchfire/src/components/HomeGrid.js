@@ -8,7 +8,7 @@ export const HomeGrid = () => {
   const page = useSelector((state) => state.page);
 
   return (
-    <div className="VizGrid" class={page !== "viz" ? "VizGrid fadeIn" : "VizGrid fadeOut"}>
+    <div className={page !== "viz" ? "VizGrid fadeIn" : "VizGrid fadeOut"}>
       <div className="viz_wide">
         <WordCloud />
       </div>
