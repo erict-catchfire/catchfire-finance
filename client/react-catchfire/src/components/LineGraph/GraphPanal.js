@@ -108,13 +108,13 @@ const LineChart = ({ width, height, data }) => {
     let priceAxisSet = false;
 
     dataKeys.forEach((d) => {
-      if (data[d][0].type == "axis") {
+      if (data[d][0].type === "axis") {
         dataAxisSet = true;
         xValues.push(d3.min(data[d], (entry) => entry.time));
         xValues.push(d3.max(data[d], (entry) => entry.time));
         yValues.push(d3.min(data[d], (entry) => entry.data));
         yValues.push(d3.max(data[d], (entry) => entry.data));
-      } else if (data[d][0].type == "price") {
+      } else if (data[d][0].type === "price") {
         priceAxisSet = true;
         maxPrice = d3.max(data[d], (entry) => entry.data);
         minPrice = d3.min(data[d], (entry) => entry.data);
@@ -228,8 +228,8 @@ const LineChart = ({ width, height, data }) => {
             .line()
             .x((d) => xScale(d.time))
             .y((d) => {
-              if (d.type == "axis") return yScale(d.data);
-              else if (d.type == "price") {
+              if (d.type === "axis") return yScale(d.data);
+              else if (d.type === "price") {
                 return yScalePrice(d.data);
               } else {
                 return yScaleVolume(d.data);
@@ -272,8 +272,8 @@ const LineChart = ({ width, height, data }) => {
             .line()
             .x((d) => xScale(d.time))
             .y((d) => {
-              if (d.type == "axis") return yScale(d.data);
-              else if (d.type == "price") {
+              if (d.type === "axis") return yScale(d.data);
+              else if (d.type === "price") {
                 return yScalePrice(d.data);
               } else {
                 return yScaleVolume(d.data);
@@ -301,8 +301,8 @@ const LineChart = ({ width, height, data }) => {
             .line()
             .x((d) => xScale2(d.time))
             .y((d) => {
-              if (d.type == "axis") return yScale2(d.data);
-              else if (d.type == "price") {
+              if (d.type === "axis") return yScale2(d.data);
+              else if (d.type === "price") {
                 return yScalePrice2(d.data);
               } else {
                 return yScaleVolume2(d.data);

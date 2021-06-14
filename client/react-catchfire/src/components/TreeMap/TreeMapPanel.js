@@ -6,7 +6,7 @@ const duration = 500;
 
 const GetTopTickers = (sentiment) => {
   const [data, setData] = useState([]);
-  const call = sentiment == "All" ? "/getTopSentimentAll" : "/getTopSentiment";
+  const call = "/getTopSentiment";
   useEffect(() => {
     fetch(call, {
       method: "POST",
@@ -179,7 +179,7 @@ const TreeMapCanvas = ({ width, height, data }) => {
       .selectAll("titles")
       .data(
         root.descendants().filter(function (d) {
-          return d.depth == 1;
+          return d.depth === 1;
         })
       )
       .enter()

@@ -233,13 +233,13 @@ def get_top_sentiment():
         .join(TickerMention, TickerMention.ticker_id == Ticker.id)
         .join(Document, Document.id == TickerMention.document_id)
         .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
-        .filter(Document.posted_at > datetime.now() - timedelta(days=1))
+        .filter(Document.posted_at > datetime.now() - timedelta(days=7))
         .filter(DocumentSentiment.model_version == MODEL_FILE)
         .group_by(Ticker.symbol)
         .order_by(desc(func.count(Ticker.symbol)))
     )
 
-    if sentiment != "All":
+    if sentiment.lower() != "all":
         long_counts_query = long_counts_query.filter(
             DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment
         )
