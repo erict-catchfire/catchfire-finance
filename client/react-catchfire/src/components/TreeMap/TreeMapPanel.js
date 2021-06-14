@@ -13,7 +13,11 @@ const GetTopTickers = (sentiment) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ sentiment: sentiment }),
+      body: JSON.stringify({
+        sentiment: sentiment,
+        long: 31,
+        short: 7,
+      }),
     }).then((response) => {
       response.json().then((data) => {
         const toSet = [];
