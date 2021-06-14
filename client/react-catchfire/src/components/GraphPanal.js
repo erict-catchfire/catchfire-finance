@@ -29,7 +29,7 @@ const LineChart = ({ width, height, data}) => {
   }, [])
 
   useEffect(() => {
-    if (data != null)
+    if (data !== null)
       drawChart();
   }, [data])
 

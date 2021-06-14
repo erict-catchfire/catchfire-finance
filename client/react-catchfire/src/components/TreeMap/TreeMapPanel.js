@@ -54,13 +54,13 @@ const TreeMapCanvas = ({ width, height, data }) => {
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
     if (
-      data.children[0].children.length != 0 &&
-      data.children[1].children.length != 0 &&
-      data.children[2].children.length != 0 &&
-      data.children[3].children.length != 0 &&
-      data.children[4].children.length != 0 &&
-      data.children[5].children.length != 0 &&
-      data.children[6].children.length != 0
+      data.children[0].children.length !== 0 &&
+      data.children[1].children.length !== 0 &&
+      data.children[2].children.length !== 0 &&
+      data.children[3].children.length !== 0 &&
+      data.children[4].children.length !== 0 &&
+      data.children[5].children.length !== 0 &&
+      data.children[6].children.length !== 0
     ) {
       drawChart();
     }
