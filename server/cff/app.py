@@ -3,13 +3,13 @@ from flask_sqlalchemy import SQLAlchemy
 from healthcheck import HealthCheck
 import tensorflow as tf
 
-from cff.views import views
+from cff.views import main
 
 LOAD_MODEL = True
 loaded_model = None
 
 app = Flask(__name__)
-app.register_blueprint(views)
+app.register_blueprint(main)
 app.config.from_pyfile("config.py")
 
 MODEL_FILE = app.config.get("MODEL_FILE")
