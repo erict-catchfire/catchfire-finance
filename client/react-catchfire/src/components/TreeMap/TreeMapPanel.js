@@ -6,24 +6,28 @@ const duration = 500;
 
 const GetTopTickers = (sentiment) => {
   const [data, setData] = useState([]);
-
+  const call = "/getTopSentiment";
   useEffect(() => {
-    fetch("/getTopSentiment", {
+    fetch(call, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ sentiment : sentiment }),
+      body: JSON.stringify({
+        sentiment: sentiment,
+        long: 31,
+        short: 7,
+      }),
     }).then((response) => {
       response.json().then((data) => {
         const toSet = [];
         for (const ticker of data) {
           toSet.push({
-            name : ticker.ticker,
-            group : ticker.ticker,
-            value : ticker.short_count,
-            op : (ticker.short_count / ticker.long_count),
-            colname : "level3"
+            name: ticker.ticker,
+            group: ticker.ticker,
+            value: ticker.short_count,
+            op: ticker.short_count / ticker.long_count,
+            colname: "level3",
           });
         }
         setData(toSet);
@@ -49,17 +53,19 @@ const TreeMapCanvas = ({ width, height, data }) => {
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-      if (
-        data.children[0].children.length != 0 &&
-        data.children[1].children.length != 0 &&
-        data.children[2].children.length != 0 &&
-        data.children[3].children.length != 0 &&
-        data.children[4].children.length != 0
-      ) {
-        drawChart();
-      }
+    if (
+      data.children[0].children.length !== 0 &&
+      data.children[1].children.length !== 0 &&
+      data.children[2].children.length !== 0 &&
+      data.children[3].children.length !== 0 &&
+      data.children[4].children.length !== 0 &&
+      data.children[5].children.length !== 0 &&
+      data.children[6].children.length !== 0
+    ) {
+      drawChart();
+    }
   }, [data]);
-  
+
   const drawChart = () => {
     var root = d3.hierarchy(data).sum(function (d) {
       return d.value;
@@ -73,24 +79,24 @@ const TreeMapCanvas = ({ width, height, data }) => {
     );
 
     var color = d3
-    .scaleOrdinal()
-    .domain(["Happy", "Sad", "Excited", "Angry","Fear"])
-    .range(["#99CCCC", "#99CC99", "#FF99CC", "#FF9999","#FFCC66"]);
+      .scaleOrdinal()
+      .domain(["Joy", "Fear", "Anger", "Sadness", "Confident", "Tentative", "Analytical", "None"])
+      .range(["#FF3333", "#336699", "#993366", "#339933", "#FF6633", "#FF99CC", "#99CCCC", "#333333"]);
 
     var opacity = d3.scaleLinear().domain([0, 2]).range([0.5, 1]);
 
     // create a tooltip
     var Tooltip = d3
-        .select("#treechart")
-        .append("div")
-        .style("opacity", 0)
-        .attr("class", "tooltip")
-        .style("background-color", "white")
-        .style("border", "solid")
-        .style("border-width", "2px")
-        .style("border-radius", "5px")
-        .style("padding", "5px")
-        .style("position", "absolute");
+      .select("#treechart")
+      .append("div")
+      .style("opacity", 0)
+      .attr("class", "tooltip")
+      .style("background-color", "white")
+      .style("border", "solid")
+      .style("border-width", "2px")
+      .style("border-radius", "5px")
+      .style("padding", "5px")
+      .style("position", "absolute");
 
     // Three function that change the tooltip when user hover / move / leave a cell
     var mouseover = function (d) {
@@ -98,9 +104,9 @@ const TreeMapCanvas = ({ width, height, data }) => {
     };
 
     var mousemove = function (event, d) {
-      Tooltip.html(d.data.name  + "<br>" + d.value + " mentions" + "<br>" + d.data.op + " sentiment")
-      .style("left", d3.pointer(event)[0] + 80 + "px")
-      .style("top", d3.pointer(event)[1] + "px");
+      Tooltip.html(d.data.name + "<br>" + d.value + " mentions" + "<br>" + d.data.op + " sentiment")
+        .style("left", d3.pointer(event)[0] + 80 + "px")
+        .style("top", d3.pointer(event)[1] + "px");
     };
 
     var mouseleave = function (d) {
@@ -150,7 +156,7 @@ const TreeMapCanvas = ({ width, height, data }) => {
         return d.data.name.replace("mister_", "");
       })
       .attr("font-size", function (d) {
-        return ((d.x1 - d.x0 < 55) || (d.y1 - d.y0 < 20)) ? "0px" : "18px";
+        return d.x1 - d.x0 < 55 || d.y1 - d.y0 < 20 ? "0px" : "18px";
       })
       .attr("fill", "#222222");
 
@@ -169,7 +175,7 @@ const TreeMapCanvas = ({ width, height, data }) => {
         return d.data.value;
       })
       .attr("font-size", function (d) {
-        return ((d.x1 - d.x0 < 55) || (d.y1 - d.y0 < 40)) ? "0px" : "12px";
+        return d.x1 - d.x0 < 55 || d.y1 - d.y0 < 40 ? "0px" : "12px";
       })
       .attr("fill", "#222222");
 
@@ -177,7 +183,7 @@ const TreeMapCanvas = ({ width, height, data }) => {
       .selectAll("titles")
       .data(
         root.descendants().filter(function (d) {
-          return d.depth == 1;
+          return d.depth === 1;
         })
       )
       .enter()
@@ -207,41 +213,53 @@ const TreeMapCanvas = ({ width, height, data }) => {
 export const TreeMapPanel = () => {
   const width = 1024 - 30;
 
-  const happy = GetTopTickers("happy");
-  const sad = GetTopTickers("sad");
-  const excited = GetTopTickers("excited");
-  const angry = GetTopTickers("anger");
+  const joy = GetTopTickers("joy");
   const fear = GetTopTickers("fear");
+  const anger = GetTopTickers("anger");
+  const sadness = GetTopTickers("sadness");
+  const confident = GetTopTickers("confident");
+  const tentative = GetTopTickers("tentative");
+  const analytical = GetTopTickers("analytical");
 
   const data2 = {
-    children : [{
-      name: "Happy",
-      children: happy,
-      colname: "level2",
-    },
-    {
-      name: "Sad",
-      children: sad,
-      colname: "level2",
-    },
-    {
-      name: "Excited",
-      children: excited,
-      colname: "level2",
-    },
-    {
-      name: "Angry",
-      children: angry,
-      colname: "level2",
-    },
-    {
-      name: "Fear",
-      children: fear,
-      colname: "level2",
-    }]
-  }
-
-  console.log(data2)
+    children: [
+      {
+        name: "Joy",
+        children: joy,
+        colname: "level2",
+      },
+      {
+        name: "Fear",
+        children: fear,
+        colname: "level2",
+      },
+      {
+        name: "Anger",
+        children: anger,
+        colname: "level2",
+      },
+      {
+        name: "Sadness",
+        children: sadness,
+        colname: "level2",
+      },
+      {
+        name: "Confident",
+        children: confident,
+        colname: "level2",
+      },
+      {
+        name: "Tentative",
+        children: tentative,
+        colname: "level2",
+      },
+      {
+        name: "Analytical",
+        children: analytical,
+        colname: "level2",
+      },
+    ],
+  };
 
   const data = {
     children: [
@@ -283,7 +301,7 @@ export const TreeMapPanel = () => {
 
   return (
     <div className="GraphPanal">
-         <TreeMapCanvas width={width} height={width} data={data2}/>
+      <TreeMapCanvas width={width} height={width} data={data2} />
     </div>
   );
 };

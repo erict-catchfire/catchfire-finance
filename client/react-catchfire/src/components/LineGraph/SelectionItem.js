@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  removeLineObject,
-  modifyLineObject,
-  removeDataAtId,
-} from "../../actions";
+import { removeLineObject, modifyLineObject, removeDataAtId } from "../../actions";
 import { useSelector, useDispatch } from "react-redux";
 import { Button, Dropdown, List, ListContent, Loader } from "semantic-ui-react";
 
@@ -24,20 +20,27 @@ export const SelectionItem = ({ id }) => {
   });
 
   const dataOptions = [
-    { key: "ats", text: "all twitter sentiment", value: "ats" },
-    { key: "ants", text: "angry twitter sentiment", value: "ants" },
-    { key: "gts", text: "good twitter sentiment", value: "gts" },
-    { key: "pri", text: "price", value: "pri" },
-    { key: "vol", text: "volume", value: "vol" },
+    { key: "joy_twitter_sentiment", text: "joy sentiment", value: "joy_twitter_sentiment" },
+    { key: "fear_twitter_sentiment", text: "fear sentiment", value: "fear_twitter_sentiment" },
+    { key: "anger_twitter_sentiment", text: "anger sentiment", value: "anger_twitter_sentiment" },
+    { key: "sadness_twitter_sentiment", text: "sadness sentiment", value: "sadness_twitter_sentiment" },
+    { key: "confident_twitter_sentiment", text: "confident sentiment", value: "confident_twitter_sentiment" },
+    { key: "tentative_twitter_sentiment", text: "tentative sentiment", value: "tentative_twitter_sentiment" },
+    { key: "analytical_twitter_sentiment", text: "analytical sentiment", value: "analytical_twitter_sentiment" },
+    { key: "all_twitter_sentiment", text: "all sentiment", value: "all_twitter_sentiment" },
+    { key: "price", text: "price", value: "price" },
+    { key: "volume", text: "volume", value: "volume" },
   ];
 
   const colorOptions = [
     { key: "black", text: "black", value: "black" },
-    { key: "white", text: "white", value: "white" },
     { key: "red", text: "red", value: "red" },
     { key: "blue", text: "blue", value: "blue" },
-    { key: "green", text: "green", value: "green" },
     { key: "magenta", text: "magenta", value: "magenta" },
+    { key: "green", text: "green", value: "green" },
+    { key: "orange", text: "orange", value: "orange" },
+    { key: "pink", text: "pink", value: "pink" },
+    { key: "cyan", text: "cyan", value: "cyan" },
   ];
 
   const patternOptions = [

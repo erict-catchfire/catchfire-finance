@@ -153,6 +153,7 @@ def _generate_sentiments_for_doc_ids(doc_ids: List[int]):
             "confident": doc_sentiment[5],
             "tentative": doc_sentiment[6],
         }
+
         strongest_value = max(sentiments.items(), key=operator.itemgetter(1))[0]
         strongest_emotion = strongest_value if sentiments[strongest_value] > STRONGEST_THRESHOLD else None
         sentiment_map = {"strongest_emotion": strongest_emotion, "emotions": sentiments}

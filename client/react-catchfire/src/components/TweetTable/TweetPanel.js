@@ -24,7 +24,7 @@ export const TweetPanel = () => {
   const width = 1024 - 30;
 
   return (
-    <div className="TweetPanel" class="TweetPanel">
+    <div className="TweetPanel">
       <Table
         striped
         role="grid"

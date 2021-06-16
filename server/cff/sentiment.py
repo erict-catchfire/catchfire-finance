@@ -1,20 +1,33 @@
-# Data Science Packages
 import os
+import sys
 
+# Data Science Packages
+import tensorflow as tf
 import numpy as np
 import pandas as pd
 
 # JSON
 import jsbeautifier
 
+from cff import config
+
 opts = jsbeautifier.default_options()
 opts.indent_size = 2
 
 # NLP Packages
 import re
-import contractions
-import tensorflow as tf
 from nltk.tokenize.toktok import ToktokTokenizer
+import contractions
+
+LOAD_MODEL = False
+MODEL_FILE = config.MODEL_FILE
+model = None
+
+if LOAD_MODEL and MODEL_FILE:
+    import nltk
+    import tensorflow_text
+
+    model = tf.keras.models.load_model(f"./cff/model/{MODEL_FILE}")
 
 
 def lower_case(text):

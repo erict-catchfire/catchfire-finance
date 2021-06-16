@@ -8,11 +8,11 @@ const dataControlReducer = (state = {}, action) => {
     case "ADD_EMPTY_LINE_OBJECT":
       newItem = {
         keyword: null,
-        dataName: "ats",
+        dataName: "happy_twitter_sentiment",
         color: "red",
         pattern: "solid",
-        type : "line",
-        dirty: false
+        type: "line",
+        dirty: false,
       };
 
       newState[_uniqueId()] = newItem;
@@ -21,11 +21,11 @@ const dataControlReducer = (state = {}, action) => {
     case "ADD_LINE_OBJECT_KEYWORD":
       newItem = {
         keyword: action.payload,
-        dataName: "ats",
+        dataName: "happy_twitter_sentiment",
         color: "red",
         pattern: "solid",
-        type : "line",
-        dirty: false
+        type: "line",
+        dirty: false,
       };
 
       newState[_uniqueId()] = newItem;
