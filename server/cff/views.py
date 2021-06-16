@@ -258,4 +258,4 @@ def get_tickers():
         .distinct(Ticker.symbol)
         .all()
     )
-    return {ticker: name for (ticker, name) in tickers}
+    return {ticker: {"longName": name} for (ticker, name) in tickers}
