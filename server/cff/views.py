@@ -16,8 +16,80 @@ iex = px.Client(api_token=config.IEX_TOKEN, version=config.IEX_ENV)
 main = Blueprint("main", __name__)
 
 # fmt: off
-stop_words = ["&amp", "&amp;", "It’s", "#", "-", "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"]
+stop_words = ["","%", ")","(","/", "&amp", "&amp;", "It’s", "#", "-", "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"]
 # fmt: on
+
+
+@main.route("/getTopDays", methods=["POST"])
+def get_top_days():
+    request_object = request.get_json()
+    ticker = request_object["ticker"]
+    length = request_object["length"]
+    sentiment = request_object["sentiment"]
+    amount = request_object["amount"]
+    to_return = []
+
+    ticker_id = db.session.query(Ticker).filter(Ticker.symbol == ticker).first().id
+
+    # I feel like this could definatly be one query. I made a query that had each day with the counts for each sentiment, however couldnt figure out how to sort them
+
+    # Find top dates for the given sentiment
+    sentiment_query = (
+        db.session.query(func.date_trunc("day", Document.posted_at), func.count())
+        .join(TickerMention, Document.id == TickerMention.document_id)
+        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
+        .filter(TickerMention.ticker_id == ticker_id)
+        .filter(DocumentSentiment.model_version == MODEL_FILE)
+        .filter(Document.posted_at > datetime.now() - timedelta(days=length))
+        .group_by(func.date_trunc("day", Document.posted_at))
+        .group_by(func.date_trunc("day", Document.posted_at))
+        .order_by(desc(func.count()))
+    )
+
+    if sentiment != "all":
+        sentiment_query = sentiment_query.filter(DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment)
+
+    # Get top x
+    data = sentiment_query.limit(amount).all()
+
+    # For each date lookup all sentiment counts and return
+    for date, _ in data:
+        # Get sentiment sums for each of the days
+        count_query = (
+            db.session.query(
+                func.date_trunc("day", Document.posted_at),
+                DocumentSentiment.sentiment["strongest_emotion"],
+                func.count(),
+            )
+            .join(TickerMention, Document.id == TickerMention.document_id)
+            .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
+            .filter(TickerMention.ticker_id == ticker_id)
+            .filter(DocumentSentiment.model_version == MODEL_FILE)
+            .filter(func.date_trunc("day", Document.posted_at) == date)
+            .group_by(func.date_trunc("day", Document.posted_at), DocumentSentiment.sentiment["strongest_emotion"])
+            .all()
+        )
+
+        r_dict = {
+            "joy": 0,
+            "fear": 0,
+            "anger": 0,
+            "sadness": 0,
+            "confident": 0,
+            "tentative": 0,
+            "analytical": 0,
+            "none": 0,
+        }
+
+        for date, sent, amount in count_query:
+            if sent == None:
+                r_dict["none"] = amount
+            else:
+                r_dict[sent] = amount
+        r_dict["date"] = date.strftime("%Y-%m-%d")
+        to_return.append(r_dict)
+
+    return jsonify(to_return)
 
 
 @main.route("/getPriceTimeSeries", methods=["POST"])
@@ -149,16 +221,16 @@ def get_words():
         .filter(DocumentSentiment.model_version == MODEL_FILE)
         .group_by(DocumentSentiment.sentiment["strongest_emotion"].astext)
         .all()
-    )
-
+    )  
+    
     word_array = []
     sentiment_word_map = {}
     for sentiment, array_of_words in words_by_sentiment:
         trimmed_words = []
         for word in array_of_words:
-            stripped_word = re.sub("[.,;&?!]", "", word)
+            stripped_word = re.sub("[.,;%&?!0-9]", "", word)
             if stripped_word.lower() not in stop_words:
-                trimmed_words.append(stripped_word)
+                trimmed_words.append(stripped_word.lower())
         sentiment_word_map[sentiment] = trimmed_words
         word_array = word_array + trimmed_words
 
@@ -178,7 +250,8 @@ def get_words():
         }
         for sentiment, words in sentiment_word_map.items():
             if top_word in words and sentiment:
-                sentiment_counts[sentiment] += 1
+                    sentiment_counts[sentiment] += words.count(top_word)
+
         max_sentiment = max(sentiment_counts.items(), key=operator.itemgetter(1))[0]
         sum_amount = sum(sentiment_counts.values())
         to_return.append(

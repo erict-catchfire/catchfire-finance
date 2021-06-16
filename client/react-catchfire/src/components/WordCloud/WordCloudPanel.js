@@ -12,7 +12,7 @@ const GetWords = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ days: 5 }),
+      body: JSON.stringify({ days: 14 }),
     }).then((response) => {
       response.json().then((data) => {
         const toSet = [];
@@ -70,12 +70,12 @@ const WordCloudCanvas = ({ width, height, data }) => {
 
     var color = d3
       .scaleOrdinal()
-      .domain([0, 7])
+      .domain(["joy", "fear", "anger", "sadness", "confident", "tentative", "analytical", "none"])
       .range(["#FF3333", "#336699", "#993366", "#339933", "#FF6633", "#FF99CC", "#99CCCC", "#333333"]);
 
     var sentText = d3
       .scaleOrdinal()
-      .domain([0, 7])
+      .domain(["joy", "fear", "anger", "sadness", "confident", "tentative", "analytical", "none"])
       .range(["Joy", "Fear", "Anger", "Sadness", "Confident", "Tentative", "Analytical", "None"]);
 
     // create a tooltip

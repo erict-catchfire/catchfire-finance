@@ -3,13 +3,18 @@ import { useSelector, useDispatch } from "react-redux";
 import { Table } from "semantic-ui-react";
 import _ from "lodash";
 
-const tableColumns = ["Date", "User", "Text", "Sent", "Anger"];
+const tableColumns = ["Date", "Ticker", "Joy", "Fear", "Anger", "Sadness", "Confident", "Tentative", "Analytical", "Total"];
 const tableColumnsMap = {
   Date: "date",
-  User: "user",
-  Text: "text",
-  Sent: "sent",
+  Ticker: "ticker",
+  Joy: "joy",
+  Sent: "fear",
   Anger: "anger",
+  Sadness: "sadness",
+  Confident: "confident",
+  Tentative: "tentative",
+  Analytical: "analytical",
+  Total: "total",
 };
 
 export const TweetPanel = () => {
@@ -57,11 +62,16 @@ export const TweetPanel = () => {
         <Table.Body>
           {data.map((data) => (
             <Table.Row key={_.uniqueId()}>
-              <Table.Cell> {data.date.toString()} </Table.Cell>
-              <Table.Cell> {data.user} </Table.Cell>
-              <Table.Cell> {data.text} </Table.Cell>
-              <Table.Cell> {data.sent} </Table.Cell>
+              <Table.Cell> {data.date.toDateString()} </Table.Cell>
+              <Table.Cell> {data.ticker} </Table.Cell>
+              <Table.Cell> {data.joy} </Table.Cell>
+              <Table.Cell> {data.fear} </Table.Cell>
               <Table.Cell> {data.anger} </Table.Cell>
+              <Table.Cell> {data.sadness} </Table.Cell>
+              <Table.Cell> {data.confident} </Table.Cell>
+              <Table.Cell> {data.tentative} </Table.Cell>
+              <Table.Cell> {data.analytical} </Table.Cell>
+              <Table.Cell> {data.total} </Table.Cell>
             </Table.Row>
           ))}
         </Table.Body>

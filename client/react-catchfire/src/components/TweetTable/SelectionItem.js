@@ -24,13 +24,17 @@ export const SelectionItem = ({ id }) => {
   });
 
   const dataOptions = [
-    { key: "rts", text: "random twitter sentiment", value: "ats" },
-    { key: "ants", text: "top angry twitter sentiment", value: "ants" },
-    { key: "gts", text: "top good twitter sentiment", value: "gts" },
+    { key: "all", text: "most mentions", value: "all" },
+    { key: "joy", text: "most joy mentions", value: "joy" },
+    { key: "anger", text: "most anger mentions", value: "anger" },
+    { key: "sad", text: "most sad mentions", value: "sad" },
+    { key: "confident", text: "most confident mentions", value: "confident" },
+    { key: "tentative", text: "most tentative mentions", value: "tentative" },
+    { key: "analytical", text: "most analytical mentions", value: "analytical" },
   ];
 
   const lengthOptions = [
-    { key: "day", text: "day", value: "day" },
+    { key: "week", text: "week", value: "week" },
     { key: "month", text: "month", value: "month" },
     { key: "year", text: "year", value: "year" },
   ];
@@ -47,20 +51,26 @@ export const SelectionItem = ({ id }) => {
   const defaultAmount = controlItems[id].amount;
 
   const handleKeywordDropdownChange = (e, { value }) => {
+    dispatch(removeTextAtId(id));
     dispatch(modifyTextObject(id, "dirty", true));
     dispatch(modifyTextObject(id, "keyword", value));
   };
 
   const handleDataDropdownChange = (e, { value }) => {
+    dispatch(removeTextAtId(id));
     dispatch(modifyTextObject(id, "dirty", true));
     dispatch(modifyTextObject(id, "dataName", value));
   };
 
   const handleLengthDropdownChange = (e, { value }) => {
+    dispatch(removeTextAtId(id));
+    dispatch(modifyTextObject(id, "dirty", true));
     dispatch(modifyTextObject(id, "length", value));
   };
 
   const handleAmountDropdownChange = (e, { value }) => {
+    dispatch(removeTextAtId(id));
+    dispatch(modifyTextObject(id, "dirty", true));
     dispatch(modifyTextObject(id, "amount", value));
   };
 
@@ -85,7 +95,7 @@ export const SelectionItem = ({ id }) => {
           defaultValue={defaultKeyword}
           onChange={handleKeywordDropdownChange}
         />{" "}
-        , display tweets with{" "}
+        , display days with the{" "}
         <Dropdown
           floating
           inline
