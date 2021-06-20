@@ -42,7 +42,6 @@ def get_top_days():
         .filter(DocumentSentiment.model_version == MODEL_FILE)
         .filter(Document.posted_at > datetime.now() - timedelta(days=length))
         .group_by(func.date_trunc("day", Document.posted_at))
-        .group_by(func.date_trunc("day", Document.posted_at))
         .order_by(desc(func.count()))
     )
 
