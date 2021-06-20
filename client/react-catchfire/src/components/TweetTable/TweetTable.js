@@ -8,11 +8,60 @@ import { Dimmer } from "semantic-ui-react";
 
 import _ from "lodash";
 
-const randomDate = (start, end, startHour, endHour) => {
-  var date = new Date(+start + Math.random() * (end - start));
-  var hour = (startHour + Math.random() * (endHour - startHour)) | 0;
-  date.setHours(hour);
-  return date;
+const lengthDict = {
+  "week" : 7,
+  "month" : 31,
+  "year" : 365
+}
+
+const GetTableData = (keyword, length, sentiment, amount, dispatch, element) => {
+  let to_return = [];
+
+  
+
+  fetch("/getTopDays", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      ticker: keyword,
+      length: lengthDict[length],
+      sentiment: sentiment,
+      amount: amount,
+    }),
+  }).then((response) => {
+    response.json().then((return_data) => {
+      for (const d of return_data) {
+        to_return.push({
+          "ticker": keyword,
+          "analytical": d.analytical,
+          "anger": d.anger,
+          "confident": d.confident,
+          "date": new Date(d.date),
+          "fear": d.fear,
+          "joy": d.joy,
+          "none": d.none,
+          "sadness": d.sadness,
+          "tentative": d.tentative,
+          "total":
+            d.analytical +
+            d.anger +
+            d.confident +
+            d.fear +
+            d.joy +
+            d.none +
+            d.sadness +
+            d.tentative,
+        });
+      }
+
+      dispatch(addTextAtId(element, to_return));
+      dispatch(modifyTextObject(element, "dirty", false)); 
+    });
+  });
+
+  return to_return;
 };
 
 export const TweetTable = () => {
@@ -25,30 +74,14 @@ export const TweetTable = () => {
   useEffect(() => {
     controlKeys.forEach((element) => {
       if (controlItems[element].dirty && controlItems[element].keyword) {
-        console.log(
-          "GET DATA FOR : ",
+        const data = GetTableData(
           controlItems[element].keyword,
-          controlItems[element].dataName
+          controlItems[element].length,
+          controlItems[element].dataName,
+          controlItems[element].amount,
+          dispatch,
+          element
         );
-
-        const data = [
-          {
-            text: "RANDOMSKJSIJ",
-            date: randomDate(new Date(2020, 0, 1), new Date(2021, 0, 1), 0, 0),
-            sent: Math.random(),
-            anger: Math.random(),
-            user: "@taytay",
-          },
-          {
-            text: "TWEEEET2",
-            date: randomDate(new Date(2020, 0, 1), new Date(2021, 0, 1), 0, 0),
-            sent: Math.random(),
-            anger: Math.random(),
-            user: "@taytay",
-          },
-        ];
-        dispatch(addTextAtId(element, data));
-        dispatch(modifyTextObject(element, "dirty", false));
       }
     });
   }, [controlItems]);
