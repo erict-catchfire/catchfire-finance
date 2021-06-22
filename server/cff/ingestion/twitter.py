@@ -10,8 +10,8 @@ from rq import Queue
 from rq.decorators import job
 from sqlalchemy import asc
 
-from cff import sentiment
-from cff.models import db, Document, Site, DocumentSentiment
+from cff import app, db, sentiment
+from cff.models import Document, Site, DocumentSentiment
 from cff.historical_worker import conn as hist_conn
 from cff.realtime_worker import conn as real_conn
 from cff.sentiment_worker import conn as sent_conn
@@ -23,12 +23,14 @@ STRONGEST_THRESHOLD = 0.4
 
 @job("historical", connection=hist_conn, timeout=-1)
 def bg_query_historical_by_symbol(symbol: str, fresh: bool = False):
-    _bg_query_tweets_for_symbol(symbol, sqlalchemy.asc, fresh)
+    with app.app_context():
+        _bg_query_tweets_for_symbol(symbol, sqlalchemy.asc, fresh)
 
 
 @job("realtime", connection=real_conn, timeout=-1)
 def bg_query_realtime_by_symbol(symbol: str):
-    _bg_query_tweets_for_symbol(symbol, sqlalchemy.desc)
+    with app.app_context():
+        _bg_query_tweets_for_symbol(symbol, sqlalchemy.desc)
 
 
 def _bg_query_tweets_for_symbol(
@@ -121,7 +123,8 @@ def _get_tweet_by_ticker(lookup_symbol: Optional[str] = None, asc_or_desc=None):
 
 @job("sentiment", connection=sent_conn, timeout=-1)
 def bg_generate_sentiments(doc_ids: List[int]):
-    _generate_sentiments_for_doc_ids(doc_ids)
+    with app.app_context():
+        _generate_sentiments_for_doc_ids(doc_ids)
 
 
 def _generate_sentiments_for_doc_ids(doc_ids: List[int]):

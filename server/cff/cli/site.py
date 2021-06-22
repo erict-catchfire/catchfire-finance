@@ -1,7 +1,8 @@
 import click
 from flask.cli import AppGroup
 
-from cff.models import db, Site
+from cff import db
+from cff.models import Site
 
 site_cli = AppGroup("site")
 

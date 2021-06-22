@@ -3,8 +3,8 @@ import os
 import click
 from flask.cli import AppGroup
 
-from cff import constants as c
-from cff.models import db, Site, Ticker
+from cff import constants as c, db
+from cff.models import Site, Ticker
 
 defaults_cli = AppGroup("defaults")
 

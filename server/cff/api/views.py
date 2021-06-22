@@ -2,18 +2,19 @@ import operator
 import re
 from collections import Counter
 from datetime import datetime, timedelta
-from flask import Blueprint, request, jsonify
-from sqlalchemy import text, func, desc, distinct
+from flask import request, jsonify
+from sqlalchemy import text, func, desc
 import yfinance as yf
 import pyEX as px
 
-from cff import config
+from cff import config, db
 from cff.sentiment import predict_sentiment, process_text
-from cff.models import db, Ticker, Document, DocumentSentiment, TickerMention
+from cff.models import Ticker, Document, DocumentSentiment, TickerMention
+
+from . import main
 
 MODEL_FILE = config.MODEL_FILE
 iex = px.Client(api_token=config.IEX_TOKEN, version=config.IEX_ENV)
-main = Blueprint("main", __name__)
 
 # fmt: off
 stop_words = ["&amp", "&amp;", "It’s", "#", "-", "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"]

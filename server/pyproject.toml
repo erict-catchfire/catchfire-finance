@@ -12,6 +12,6 @@ exclude = '''
 (
     __pycache__
     | ^/cff/constants.py
-    | ^/cff/model/*
+    | ^/cff/modeling/*
 )
 '''
