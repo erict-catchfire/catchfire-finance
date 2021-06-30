@@ -4,8 +4,13 @@ from collections import Counter
 from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify
 from sqlalchemy import text, func, desc, distinct
+from sqlalchemy.sql.expression import outerjoin
 import yfinance as yf
 import pyEX as px
+import numpy as np
+import pandas as pd
+from scipy.stats.stats import pearsonr
+import math
 
 from cff import config
 from cff.sentiment import predict_sentiment, process_text
@@ -124,12 +129,33 @@ def get_sentiment_timeseries():
     length = request_object["length"]
     sentiment = request_object["sentiment"]
 
+    to_return = get_sentiment_timeseries_helper(ticker, length, sentiment, "hour")
+
+    return jsonify(to_return)
+
+
+def get_sentiment_timeseries_helper(ticker, length, sentiment, trunc_amount):
     to_return = []
 
     ticker_id = db.session.query(Ticker).filter(Ticker.symbol == ticker).first().id
 
-    time_series_query = (
-        db.session.query(func.date_trunc("hour", Document.posted_at).label("m"), func.count(Document.posted_at))
+    if trunc_amount == "hour":
+        delta = 1
+    else:
+        delta = 24
+
+    series = db.session.query(
+        db.func.generate_series(
+            db.func.min(func.date_trunc(trunc_amount, datetime.now()) - timedelta(days=length)),
+            db.func.max(func.date_trunc(trunc_amount, datetime.now())),
+            timedelta(hours=delta),
+        ).label("ts")
+    ).subquery()
+
+    time_series_values = (
+        db.session.query(
+            func.date_trunc(trunc_amount, Document.posted_at).label("m"), func.count(Document.posted_at).label("cnt")
+        )
         .join(TickerMention, Document.id == TickerMention.document_id)
         .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
         .filter(TickerMention.ticker_id == ticker_id)
@@ -138,17 +164,25 @@ def get_sentiment_timeseries():
         .group_by("m")
         .order_by(text("m desc"))
     )
-    if sentiment != "all":
-        time_series_query = time_series_query.filter(
-            DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment
-        )
 
-    data = time_series_query.all()
+    if sentiment != "all":
+        time_series_values = time_series_values.filter(
+            DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment
+        ).subquery()
+    else:
+        time_series_values = time_series_values.subquery()
+
+    data = (
+        db.session.query(series.c.ts, db.func.coalesce(time_series_values.c.cnt, 0))
+        .outerjoin(time_series_values, time_series_values.c.m == series.c.ts)
+        .order_by(series.c.ts)
+        .all()
+    )
 
     for date, amount in data:
         to_return.append({"date": date, "amount": amount})
 
-    return jsonify(to_return)
+    return to_return
 
 
 @main.route("/getTopSentiment", methods=["POST"])
@@ -220,8 +254,8 @@ def get_words():
         .filter(DocumentSentiment.model_version == MODEL_FILE)
         .group_by(DocumentSentiment.sentiment["strongest_emotion"].astext)
         .all()
-    )  
-    
+    )
+
     word_array = []
     sentiment_word_map = {}
     for sentiment, array_of_words in words_by_sentiment:
@@ -249,7 +283,7 @@ def get_words():
         }
         for sentiment, words in sentiment_word_map.items():
             if top_word in words and sentiment:
-                    sentiment_counts[sentiment] += words.count(top_word)
+                sentiment_counts[sentiment] += words.count(top_word)
 
         max_sentiment = max(sentiment_counts.items(), key=operator.itemgetter(1))[0]
         sum_amount = sum(sentiment_counts.values())
@@ -294,6 +328,12 @@ def get_price():
     return jsonify(ticker_dict)
 
 
+def nan_to (input, to):
+    if (math.isnan(input)):
+        return to
+    else:
+        return input 
+
 @main.route("/getTableData", methods=["POST"])
 def get_table_data():
     ticker_dict = {}
@@ -305,18 +345,103 @@ def get_table_data():
 
     tickers = Ticker.query.filter(Ticker.symbol.in_(request_object["tickers"]))
 
+    all_fill = np.zeros(30)
+    joy_fill = np.zeros(30)
+    fear_fill = np.zeros(30)
+    anger_fill = np.zeros(30)
+    sadness_fill = np.zeros(30)
+    confident_fill = np.zeros(30)
+    tentative_fill = np.zeros(30)
+    analytical_fill = np.zeros(30)
+
     # This is totally arbitrary for now.
     for ticker in tickers:
-        prices = yf.Ticker(ticker.symbol).history(period="1mo")["Close"]
-        average = sum(prices) / len(prices)
+        all = get_sentiment_timeseries_helper(ticker.symbol, 29, "all", "day")
+        joy = get_sentiment_timeseries_helper(ticker.symbol, 29, "joy", "day")
+        fear = get_sentiment_timeseries_helper(ticker.symbol, 29, "fear", "day")
+        anger = get_sentiment_timeseries_helper(ticker.symbol, 29, "anger", "day")
+        sadness = get_sentiment_timeseries_helper(ticker.symbol, 29, "sadness", "day")
+        confident = get_sentiment_timeseries_helper(ticker.symbol, 29, "confident", "day")
+        tentative = get_sentiment_timeseries_helper(ticker.symbol, 29, "tentative", "day")
+        analytical = get_sentiment_timeseries_helper(ticker.symbol, 29, "analytical", "day")
+
+        for i in range(0, 30):
+            all_fill[i] = all[i]["amount"]
+            joy_fill[i] = joy[i]["amount"]
+            fear_fill[i] = fear[i]["amount"]
+            anger_fill[i] = anger[i]["amount"]
+            sadness_fill[i] = sadness[i]["amount"]
+            confident_fill[i] = confident[i]["amount"]
+            tentative_fill[i] = tentative[i]["amount"]
+            analytical_fill[i] = analytical[i]["amount"]
+
+        data = iex.chartDF(ticker.symbol, closeOnly=True, timeframe="3m").reset_index()
+
+        thDayData = data[:30]
+        percentChange = thDayData["changePercent"].to_numpy()
+        volume = pd.to_numeric(data.iloc[::-1]["volume"]).pct_change().iloc[::-1][:30].to_numpy()
+
+        # Returns (r-value, two-tailed p-test)
+        # Warning: Small sample size makes p-test harder to pass
+        all_corr_p = pearsonr(all_fill, percentChange)
+        all_corr_v = pearsonr(all_fill, volume)
+
+        joy_corr_p = pearsonr(joy_fill, percentChange)
+        joy_corr_v = pearsonr(joy_fill, volume)
+
+        fear_corr_p = pearsonr(fear_fill, percentChange)
+        fear_corr_v = pearsonr(fear_fill, volume)
+
+        anger_corr_p = pearsonr(anger_fill, percentChange)
+        anger_corr_v = pearsonr(anger_fill, volume)
+
+        sadness_corr_p = pearsonr(sadness_fill, percentChange)
+        sadness_corr_v = pearsonr(sadness_fill, volume)
+
+        confident_corr_p = pearsonr(confident_fill, percentChange)
+        confident_corr_v = pearsonr(confident_fill, volume)
+
+        tentative_corr_p = pearsonr(tentative_fill, percentChange)
+        tentative_corr_v = pearsonr(tentative_fill, volume)
+
+        analytical_corr_p = pearsonr(analytical_fill, percentChange)
+        analytical_corr_v = pearsonr(analytical_fill, volume)
 
         ticker_dict[ticker.symbol] = [
             ticker.long_name,
             ticker.classification["sector"],
-            round(prices[0] * 100) / 100,
-            round(prices[1] * 100) / 100,
-            round(prices[2] * 100) / 100,
-            round(average * 100) / 100,
+            nan_to(all_corr_p[0],0),
+            nan_to(all_corr_p[1],1),
+            nan_to(all_corr_v[0],0),
+            nan_to(all_corr_v[1],1),
+            nan_to(joy_corr_p[0],0),
+            nan_to(joy_corr_p[1],1),
+            nan_to(joy_corr_v[0],0),
+            nan_to(joy_corr_v[1],1),
+            nan_to(fear_corr_p[0],0),
+            nan_to(fear_corr_p[1],1),
+            nan_to(fear_corr_v[0],0),
+            nan_to(fear_corr_v[1],1),
+            nan_to(anger_corr_p[0],0),
+            nan_to(anger_corr_p[1],1),
+            nan_to(anger_corr_v[0],0),
+            nan_to(anger_corr_v[1],1),
+            nan_to(sadness_corr_p[0],0),
+            nan_to(sadness_corr_p[1],1),
+            nan_to(sadness_corr_v[0],0),
+            nan_to(sadness_corr_v[1],1),
+            nan_to(confident_corr_p[0],0),
+            nan_to(confident_corr_p[1],1),
+            nan_to(confident_corr_v[0],0),
+            nan_to(confident_corr_v[1],1),
+            nan_to(tentative_corr_p[0],0),
+            nan_to(tentative_corr_p[1],1),
+            nan_to(tentative_corr_v[0],0),
+            nan_to(tentative_corr_v[1],1),
+            nan_to(analytical_corr_p[0],0),
+            nan_to(analytical_corr_p[1],1),
+            nan_to(analytical_corr_v[0],0),
+            nan_to(analytical_corr_v[1],1),
         ]
 
     return jsonify(ticker_dict)
@@ -330,4 +455,4 @@ def get_tickers():
         .distinct(Ticker.symbol)
         .all()
     )
-    return {ticker: {"longName": name} for (ticker, name) in tickers}
+    return {ticker: name for (ticker, name) in tickers}

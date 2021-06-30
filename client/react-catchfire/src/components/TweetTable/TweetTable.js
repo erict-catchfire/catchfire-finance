@@ -9,15 +9,13 @@ import { Dimmer } from "semantic-ui-react";
 import _ from "lodash";
 
 const lengthDict = {
-  "week" : 7,
-  "month" : 31,
-  "year" : 365
-}
+  week: 7,
+  month: 31,
+  year: 365,
+};
 
 const GetTableData = (keyword, length, sentiment, amount, dispatch, element) => {
   let to_return = [];
-
-  
 
   fetch("/getTopDays", {
     method: "POST",
@@ -34,30 +32,22 @@ const GetTableData = (keyword, length, sentiment, amount, dispatch, element) => 
     response.json().then((return_data) => {
       for (const d of return_data) {
         to_return.push({
-          "ticker": keyword,
-          "analytical": d.analytical,
-          "anger": d.anger,
-          "confident": d.confident,
-          "date": new Date(d.date),
-          "fear": d.fear,
-          "joy": d.joy,
-          "none": d.none,
-          "sadness": d.sadness,
-          "tentative": d.tentative,
-          "total":
-            d.analytical +
-            d.anger +
-            d.confident +
-            d.fear +
-            d.joy +
-            d.none +
-            d.sadness +
-            d.tentative,
+          ticker: keyword,
+          analytical: d.analytical,
+          anger: d.anger,
+          confident: d.confident,
+          date: new Date(d.date),
+          fear: d.fear,
+          joy: d.joy,
+          none: d.none,
+          sadness: d.sadness,
+          tentative: d.tentative,
+          total: d.analytical + d.anger + d.confident + d.fear + d.joy + d.none + d.sadness + d.tentative,
         });
       }
 
       dispatch(addTextAtId(element, to_return));
-      dispatch(modifyTextObject(element, "dirty", false)); 
+      dispatch(modifyTextObject(element, "dirty", false));
     });
   });
 

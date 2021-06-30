@@ -6,7 +6,7 @@
 
 .VizGrid {
     font-family: "Source Sans Pro", sans-serif;
-    color : "#222222";
+    color: "#222222";
     height: minmax(100vh, max-content);
     display: grid;
     grid-template-columns: 1fr 1fr;
