@@ -89,6 +89,7 @@ export const SelectionItem = ({ id }) => {
         <Dropdown
           floating
           inline
+          upward
           options={keyWordOptions}
           defaultValue={defaultKeyword}
           onChange={handleKeywordDropdownChange}
@@ -97,6 +98,7 @@ export const SelectionItem = ({ id }) => {
         <Dropdown
           floating
           inline
+          upward
           options={dataOptions}
           defaultValue={defaultData}
           onChange={handleDataDropdownChange}
@@ -105,6 +107,7 @@ export const SelectionItem = ({ id }) => {
         <Dropdown
           floating
           inline
+          upward
           options={colorOptions}
           defaultValue={defaultColor}
           onChange={handleColorDropdownChange}
@@ -113,6 +116,7 @@ export const SelectionItem = ({ id }) => {
         <Dropdown
           floating
           inline
+          upward
           options={patternOptions}
           defaultValue={defaultPattern}
           onChange={handlePatternDropdownChange}

@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  removeTextObject,
-  modifyTextObject,
-  removeTextAtId,
-} from "../../actions";
+import { removeTextObject, modifyTextObject, removeTextAtId } from "../../actions";
 import { useSelector, useDispatch } from "react-redux";
 import { Button, Dropdown, List, ListContent, Loader } from "semantic-ui-react";
 
@@ -91,6 +87,7 @@ export const SelectionItem = ({ id }) => {
         <Dropdown
           floating
           inline
+          upward
           options={keyWordOptions}
           defaultValue={defaultKeyword}
           onChange={handleKeywordDropdownChange}
@@ -99,6 +96,7 @@ export const SelectionItem = ({ id }) => {
         <Dropdown
           floating
           inline
+          upward
           options={dataOptions}
           defaultValue={defaultData}
           onChange={handleDataDropdownChange}
@@ -107,6 +105,7 @@ export const SelectionItem = ({ id }) => {
         <Dropdown
           floating
           inline
+          upward
           options={lengthOptions}
           defaultValue={defaultLength}
           onChange={handleLengthDropdownChange}
@@ -115,6 +114,7 @@ export const SelectionItem = ({ id }) => {
         <Dropdown
           floating
           inline
+          upward
           options={amountOptions}
           defaultValue={defaultAmount}
           onChange={handleAmountDropdownChange}
