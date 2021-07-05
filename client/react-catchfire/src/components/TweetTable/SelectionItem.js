@@ -74,15 +74,18 @@ export const SelectionItem = ({ id }) => {
     <List.Item>
       <List.Content floated="right">
         <Button
+          basic
+          size="mini"
+          color="orange"
           onClick={() => {
             dispatch(removeTextObject(id));
             dispatch(removeTextAtId(id));
           }}
         >
-          -
+          Remove Set
         </Button>
       </List.Content>
-      <ListContent floated="left">
+      <ListContent floated="left" className="ListText">
         For{" "}
         <Dropdown
           floating
@@ -119,7 +122,6 @@ export const SelectionItem = ({ id }) => {
           defaultValue={defaultAmount}
           onChange={handleAmountDropdownChange}
         />{" "}
-        ID {"  " + id + " "}
         <Loader active={controlItems[id] === undefined} inline size="mini" />
       </ListContent>
     </List.Item>

@@ -328,11 +328,12 @@ def get_price():
     return jsonify(ticker_dict)
 
 
-def nan_to (input, to):
-    if (math.isnan(input)):
+def nan_to(input, to):
+    if math.isnan(input):
         return to
     else:
-        return input 
+        return input
+
 
 @main.route("/getTableData", methods=["POST"])
 def get_table_data():
@@ -410,38 +411,38 @@ def get_table_data():
         ticker_dict[ticker.symbol] = [
             ticker.long_name,
             ticker.classification["sector"],
-            nan_to(all_corr_p[0],0),
-            nan_to(all_corr_p[1],1),
-            nan_to(all_corr_v[0],0),
-            nan_to(all_corr_v[1],1),
-            nan_to(joy_corr_p[0],0),
-            nan_to(joy_corr_p[1],1),
-            nan_to(joy_corr_v[0],0),
-            nan_to(joy_corr_v[1],1),
-            nan_to(fear_corr_p[0],0),
-            nan_to(fear_corr_p[1],1),
-            nan_to(fear_corr_v[0],0),
-            nan_to(fear_corr_v[1],1),
-            nan_to(anger_corr_p[0],0),
-            nan_to(anger_corr_p[1],1),
-            nan_to(anger_corr_v[0],0),
-            nan_to(anger_corr_v[1],1),
-            nan_to(sadness_corr_p[0],0),
-            nan_to(sadness_corr_p[1],1),
-            nan_to(sadness_corr_v[0],0),
-            nan_to(sadness_corr_v[1],1),
-            nan_to(confident_corr_p[0],0),
-            nan_to(confident_corr_p[1],1),
-            nan_to(confident_corr_v[0],0),
-            nan_to(confident_corr_v[1],1),
-            nan_to(tentative_corr_p[0],0),
-            nan_to(tentative_corr_p[1],1),
-            nan_to(tentative_corr_v[0],0),
-            nan_to(tentative_corr_v[1],1),
-            nan_to(analytical_corr_p[0],0),
-            nan_to(analytical_corr_p[1],1),
-            nan_to(analytical_corr_v[0],0),
-            nan_to(analytical_corr_v[1],1),
+            nan_to(all_corr_p[0], 0),
+            nan_to(all_corr_p[1], 1),
+            nan_to(all_corr_v[0], 0),
+            nan_to(all_corr_v[1], 1),
+            nan_to(joy_corr_p[0], 0),
+            nan_to(joy_corr_p[1], 1),
+            nan_to(joy_corr_v[0], 0),
+            nan_to(joy_corr_v[1], 1),
+            nan_to(fear_corr_p[0], 0),
+            nan_to(fear_corr_p[1], 1),
+            nan_to(fear_corr_v[0], 0),
+            nan_to(fear_corr_v[1], 1),
+            nan_to(anger_corr_p[0], 0),
+            nan_to(anger_corr_p[1], 1),
+            nan_to(anger_corr_v[0], 0),
+            nan_to(anger_corr_v[1], 1),
+            nan_to(sadness_corr_p[0], 0),
+            nan_to(sadness_corr_p[1], 1),
+            nan_to(sadness_corr_v[0], 0),
+            nan_to(sadness_corr_v[1], 1),
+            nan_to(confident_corr_p[0], 0),
+            nan_to(confident_corr_p[1], 1),
+            nan_to(confident_corr_v[0], 0),
+            nan_to(confident_corr_v[1], 1),
+            nan_to(tentative_corr_p[0], 0),
+            nan_to(tentative_corr_p[1], 1),
+            nan_to(tentative_corr_v[0], 0),
+            nan_to(tentative_corr_v[1], 1),
+            nan_to(analytical_corr_p[0], 0),
+            nan_to(analytical_corr_p[1], 1),
+            nan_to(analytical_corr_v[0], 0),
+            nan_to(analytical_corr_v[1], 1),
         ]
 
     return jsonify(ticker_dict)

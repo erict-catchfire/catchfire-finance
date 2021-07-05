@@ -4,6 +4,8 @@ import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { VizGrid } from "./components/VizGrid";
 import { HomeGrid } from "./components/HomeGrid";
+import { AboutGrid } from "./components/AboutGrid";
+import { DonationGrid } from "./components/DonationGrid";
 import { useSelector } from "react-redux";
 import background from "./background.png"
 
@@ -27,6 +29,8 @@ function App() {
         <div>
           <HomeGrid />
           <VizGrid />
+          <AboutGrid />
+          <DonationGrid />
         </div>
         <div className="Right" style={{backgroundImage: `url(${background})`}}> 
           {/* <img className="img-backleft" src={background} alt="background" style={{objectFit:"cover",maxHeight:"100%"}}></img> */}

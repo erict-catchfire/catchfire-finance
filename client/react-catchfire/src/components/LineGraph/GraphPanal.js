@@ -22,12 +22,12 @@ const LineChart = ({ width, height, data }) => {
   const controlItems = useSelector((state) => state.dataLine);
   const dispatch = useDispatch();
 
-  const margin = { top: 15, right: 25, bottom: 100, left: 25 };
+  const margin = { top: 15, right: 25, bottom: 100, left: 35 };
   const margin2 = {
     top: height - margin.top - margin.bottom + 45,
     right: 25,
     bottom: 40,
-    left: 25,
+    left: 35,
   };
 
   const innerHeight = height - margin.top - margin.bottom;
@@ -332,8 +332,7 @@ export const GraphPanal = () => {
   const dataItems = useSelector((state) => state.dataCollection);
   const dataKeys = Object.keys(dataItems);
 
-  // Lol Magic Numbers
-  const width = 1024 - 30;
+  const width = 1096;
 
   return (
     <div className="GraphPanal">
