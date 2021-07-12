@@ -1,7 +1,7 @@
 import React from "react";
 import { removeLineObject, modifyLineObject, removeDataAtId } from "../../actions";
 import { useSelector, useDispatch } from "react-redux";
-import { Button, Dropdown, List, ListContent, Loader } from "semantic-ui-react";
+import { Button, Dropdown, List, ListContent, Loader, Grid } from "semantic-ui-react";
 
 export const SelectionItem = ({ id }) => {
   const dispatch = useDispatch();
@@ -73,18 +73,21 @@ export const SelectionItem = ({ id }) => {
   };
 
   return (
-    <List.Item>
+    <List.Item verticalAlign="middle">
       <List.Content floated="right">
         <Button
+          basic
+          size="mini"
+          color="orange"
           onClick={() => {
             dispatch(removeLineObject(id));
             dispatch(removeDataAtId(id));
           }}
         >
-          -
+          Remove Line
         </Button>
       </List.Content>
-      <ListContent floated="left">
+      <List.Content className="ListText">
         For{" "}
         <Dropdown
           floating
@@ -121,9 +124,9 @@ export const SelectionItem = ({ id }) => {
           defaultValue={defaultPattern}
           onChange={handlePatternDropdownChange}
         />{" "}
-        pattern. {"  " + id + " "}
+        pattern.{"  "}
         <Loader active={dataItems[id] === undefined} inline size="mini" />
-      </ListContent>
+      </List.Content>
     </List.Item>
   );
 };

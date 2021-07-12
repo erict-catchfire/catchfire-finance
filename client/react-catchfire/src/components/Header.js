@@ -11,24 +11,27 @@ export const Header = ({ logoWidth, logoHeight }) => {
   return (
     <div className="Header">
       <div style={{ paddingTop: "1.5%" }}>
-        <img className="img-responsive" src={logo} alt="logo"/>
+        <img className="img-responsive" src={logo} alt="logo" />
       </div>
       <div className="Searchbar">
         <Searchbar />
       </div>
       <div className="HeaderLinks">
-        <Button size="mini" onClick={() => dispatch(setPage("home"))}>
+        <Button size="small" inverted color="orange" onClick={() => dispatch(setPage("home"))}>
           Home
         </Button>
-        <Button size="mini" onClick={() => dispatch(setPage("viz"))}>
-          Viz.
+        <Button size="small" inverted color="orange" onClick={() => dispatch(setPage("viz"))}>
+          Ticker
         </Button>
-        <Button size="mini" onClick={() => dispatch(setPage("about"))}>
+        <Button size="small" inverted color="orange" onClick={() => dispatch(setPage("about"))}>
           About
         </Button>
-        <Button size="mini" onClick={() => dispatch(setPage("donation"))}>
+        <Button size="small" inverted color="orange" onClick={() => dispatch(setPage("donation"))}>
           Donation
         </Button>
+        <Button circular size="mini" color="orange" icon="discord" />
+        <Button circular size="mini" color="orange" icon="twitter" />
+        <Button circular size="mini" color="orange" icon="patreon" />
       </div>
     </div>
   );

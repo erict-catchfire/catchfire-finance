@@ -11,14 +11,16 @@ export const TweetControl = () => {
 
   return (
     <div className="ControlPanal">
-      <div>
+      <div className="ListBox">
         <List divided verticalAlign="middle">
           {controlKeys.map((key) => (
             <SelectionItem key={key} id={key} />
           ))}
         </List>
       </div>
-      <Button onClick={() => dispatch(addEmptyTextObject())}>+</Button>
+      <Button basic size="mini" color="orange" onClick={() => dispatch(addEmptyTextObject())}>
+        Add Set
+      </Button>
     </div>
   );
 };

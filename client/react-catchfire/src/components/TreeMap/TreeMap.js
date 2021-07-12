@@ -3,12 +3,15 @@ import { InfoBar } from "../InfoBar";
 import { toggleTreeMapDimmer } from "../../actions";
 import { TreeMapPanel } from "./TreeMapPanel";
 import { Dimmer } from "semantic-ui-react";
+import { useSelector, useDispatch } from "react-redux";
 
 export const TreeMap = () => {
+  const dimmerState = useSelector((state) => state.treemapDimmer);
+
   return (
     <>
       <Dimmer.Dimmable blurring dimmed={false}>
-        <Dimmer active={false}>
+        <Dimmer active={dimmerState}>
           <div>HELP TEXT OR IMAGE</div>
         </Dimmer>
         <div className="TreeMap" style={{ paddingLeft: "5%" }}>

@@ -49,7 +49,7 @@ export const toggleWordCloudDimmer = () => {
 
 export const toggleTreeMapDimmer = () => {
   return {
-    type: "TOGGLE_WC_DIMMER",
+    type: "TOGGLE_TM_DIMMER",
   };
 };
 
