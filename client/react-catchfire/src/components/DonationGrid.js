@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { Card, Image, Button, Icon } from "semantic-ui-react";
 import patreon from "../patreon_mod.png";
 import coinbase from "../coinbase_mod.png";
-import shibu from "../shibu_mod.png";
+import bmac from "../bmac_mod.png";
 
 export const DonationGrid = () => {
   const page = useSelector((state) => state.page);
@@ -19,7 +19,11 @@ export const DonationGrid = () => {
   const coinbaseExtra = (
     <a>
       <Icon name="angle right" />
-      <a class="donate-with-crypto" href="https://commerce.coinbase.com/checkout/a46ac12c-44a7-494a-9f53-335ba8d0dd6b">
+      <a
+        class="donate-with-crypto"
+        target="_blank"
+        href="https://commerce.coinbase.com/checkout/a46ac12c-44a7-494a-9f53-335ba8d0dd6b"
+      >
         {" "}
         Donate with Cash or Crypto
       </a>
@@ -30,19 +34,19 @@ export const DonationGrid = () => {
   const patronExtra = (
     <a>
       <Icon name="angle right" />
-      <a class="donate-with-crypto" href="https://commerce.coinbase.com/checkout/a46ac12c-44a7-494a-9f53-335ba8d0dd6b">
+      <a class="donate-with-pat" target="_blank" href="https://www.patreon.com/catchfirefinance">
         {" "}
         Donate through Patreon
       </a>
     </a>
   );
 
-  const cryptoExtra = (
+  const bmacExtra = (
     <a>
       <Icon name="angle right" />
-      <a class="donate-with-crypto" href="https://commerce.coinbase.com/checkout/a46ac12c-44a7-494a-9f53-335ba8d0dd6b">
+      <a class="donate-with-coffee" target="_blank" href="https://www.buymeacoffee.com/catchfire">
         {" "}
-        Donate with Other Crypto
+        Donate with Buy Me a Coffee
       </a>
     </a>
   );
@@ -50,7 +54,7 @@ export const DonationGrid = () => {
   return (
     <div className={page == "donation" ? "VizGrid fadeIn" : "VizGrid fadeOut"}>
       <div className="viz_wide">
-        <div className="donationTitle">
+        <div className="donationTitle" style={{ paddingTop: "3.4em" }}>
           <h1>Help keep this site going. </h1>
         </div>
         <div className="donation">
@@ -58,7 +62,7 @@ export const DonationGrid = () => {
             <Card
               image={coinbase}
               header="Coinbase"
-              description="Help out with a one time crypto or dollar donation through Coinbase."
+              description="Help out with a one time crypto donation through Coinbase."
               extra={coinbaseExtra}
             ></Card>
             <Card
@@ -68,10 +72,10 @@ export const DonationGrid = () => {
               extra={patronExtra}
             />
             <Card
-              image={shibu}
-              header="Other Crypto"
-              description="Help out with various other cryptos."
-              extra={cryptoExtra}
+              image={bmac}
+              header="Buy Me a Coffee"
+              description="Help out with a one time dollar donation through Buy Me a Coffee."
+              extra={bmacExtra}
             />
           </Card.Group>
         </div>
