@@ -144,7 +144,18 @@ export const DataTable = () => {
     <div className="DataTable">
       <Dimmer.Dimmable blurring dimmed={dimmerState}>
         <Dimmer active={dimmerState}>
-          <div>HELP TEXT OR IMAGE</div>
+          <div className="donationTitle">
+            <h2> Correlation Table </h2>
+          </div>
+          <div className="textBody">
+            This table shows the r-value and two-tailed p-test values between each emotion and price/volume. (Pearson
+            Correlation). Top value is the r-value and the bottom value is the p-value.
+          </div>
+          <div className="textBody">
+            <br></br>
+            A: Anger, J: Joy, F: Fear, AN: Analytical, S: Sad, C: Confident, T: Tentative, ANA: Analytical
+            <br></br>
+          </div>
         </Dimmer>
         <div className="SemanticTable">
           <Table compact="very" size="small" sortable={true}>

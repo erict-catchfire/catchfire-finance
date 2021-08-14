@@ -149,7 +149,24 @@ export const LineGraph = () => {
     <>
       <Dimmer.Dimmable blurring dimmed={dimmerState}>
         <Dimmer active={dimmerState}>
-          <div>HELP TEXT OR IMAGE</div>
+          <div className="donationTitle">
+            <h1> Line Graph </h1>
+          </div>
+          <h3> Graph Panel </h3>
+          <div className="textBody">
+            The top of this component shows the selected data items from the control panel below.
+          </div>
+          <h3> Control Panel </h3>
+          <div className="textBody">
+            The bottom half contains the control panal which consists of data items to display on the graph. For each
+            data item you can select which ticker you want to see data for, the type of data for that ticker, the color
+            of the line, and the shape of that line. You can add and remove data items through the buttons to the right
+            and bottom.
+          </div>
+          <div className="textBody">
+            <br></br>
+            You can only select to show data from tickers in the search bar above.
+          </div>
         </Dimmer>
         <div className="LineGraph">
           <GraphPanal />

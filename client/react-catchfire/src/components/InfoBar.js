@@ -1,17 +1,30 @@
 import React from "react";
 import { useDispatch } from "react-redux";
-import { Radio } from "semantic-ui-react";
+import { Radio, Popup } from "semantic-ui-react";
 
 export const InfoBar = ({ toggleFunction }) => {
   const dispatch = useDispatch();
 
+  const RadioDiv = () => {
+    <div className="radioDiv">
+      <Radio slider size="mini" onClick={() => dispatch(toggleFunction)}>
+        Info
+      </Radio>
+    </div>;
+  };
+
   return (
     <div className="InfoBar">
-      <div className="textDiv">Click for more explanation.</div>
+      <div className="textDiv"></div>
       <div className="radioDiv">
-        <Radio slider size='mini' onClick={() => dispatch(toggleFunction)}>
-          Info
-        </Radio>
+        <Popup
+          content="Click for more explanation."
+          trigger={
+            <Radio slider size="mini" onClick={() => dispatch(toggleFunction)}>
+              Info
+            </Radio>
+          }
+        />
       </div>
     </div>
   );
