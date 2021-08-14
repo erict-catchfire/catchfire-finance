@@ -10,7 +10,7 @@ from rq import Queue
 from rq.decorators import job
 from sqlalchemy import asc
 
-from cff import app, db, sentiment
+from cff import app, config, db, sentiment
 from cff.models import Document, Site, DocumentSentiment
 from cff.historical_worker import conn as hist_conn
 from cff.realtime_worker import conn as real_conn
@@ -19,6 +19,27 @@ from cff.sentiment_worker import conn as sent_conn
 TEMP_DIR = "temp"
 MINIMUM_FAVES = 2
 STRONGEST_THRESHOLD = 0.4
+
+
+@job("sentiment", connection=hist_conn, timeout=-1)
+def test_sentiment_job(test_str: str):
+    array_of_doc_text = [test_str]
+
+    processed_text: np.array = sentiment.process_text(array_of_doc_text)
+    doc_sentiments: np.array = sentiment.predict_sentiment(processed_text)
+
+    for doc_sentiment in doc_sentiments:
+        sentiments = {
+            "anger": doc_sentiment[0],
+            "fear": doc_sentiment[1],
+            "joy": doc_sentiment[2],
+            "sadness": doc_sentiment[3],
+            "analytical": doc_sentiment[4],
+            "confident": doc_sentiment[5],
+            "tentative": doc_sentiment[6],
+        }
+        print(f"Phrase: {test_str}")
+        print(f"Has sentiments of: {sentiments}")
 
 
 @job("historical", connection=hist_conn, timeout=-1)
@@ -161,6 +182,6 @@ def _generate_sentiments_for_doc_ids(doc_ids: List[int]):
         strongest_emotion = strongest_value if sentiments[strongest_value] > STRONGEST_THRESHOLD else None
         sentiment_map = {"strongest_emotion": strongest_emotion, "emotions": sentiments}
 
-        DocumentSentiment(document_id=doc_id, model_version=sentiment.MODEL_FILE, sentiment=sentiment_map).save()
+        DocumentSentiment(document_id=doc_id, model_version=config.MODEL_FILE, sentiment=sentiment_map).save()
 
     db.session.commit()

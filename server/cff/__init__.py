@@ -2,7 +2,6 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from healthcheck import HealthCheck
 
-
 app = Flask(__name__)
 app.config.from_pyfile("config.py")
 

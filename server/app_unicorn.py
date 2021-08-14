@@ -17,4 +17,4 @@ pythonpath = "."
 
 
 def on_starting(server):
-    import cff.modeling
+    from cff.modeling import loaded_model

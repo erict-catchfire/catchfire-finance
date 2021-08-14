@@ -112,3 +112,10 @@ def add_ticker(tickers, crypto):
         for ticker in tickers:
             twitter.bg_query_realtime_by_symbol.delay(ticker)
         click.secho(f"Gathering realtime data for: {tickers}", fg="green")
+
+
+@twitter_cli.command("test_job")
+@click.option("--test", "test", required=False, default="")
+@with_appcontext
+def test(test: str):
+    twitter.test_sentiment_job.delay(test)
