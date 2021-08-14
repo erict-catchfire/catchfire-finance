@@ -19,4 +19,6 @@ npm-debug.log
 yarn-error.log
 
 server/temp
-server/cff/model
+server/cff/modeling/*
+!server/cff/modeling/__init__.py
+
