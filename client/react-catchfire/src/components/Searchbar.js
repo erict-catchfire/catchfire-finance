@@ -17,9 +17,10 @@ const GetTickers = () => {
       response.json().then((data) => {
         const toSet = [];
         for (const ticker in data) {
+          let tickerName = data[ticker] != null ? data[ticker] : ticker
           toSet.push({
             key: ticker,
-            content: data[ticker].longName,
+            content: tickerName,
             text: ticker,
             value: ticker,
             label: ticker,
