@@ -17,21 +17,21 @@ export const Header = ({ logoWidth, logoHeight }) => {
         <Searchbar />
       </div>
       <div className="HeaderLinks">
-        <Button size="small" inverted color="orange" onClick={() => dispatch(setPage("home"))}>
+        <Button size="small" color="gray" onClick={() => dispatch(setPage("home"))}>
           Home
         </Button>
-        <Button size="small" inverted color="orange" onClick={() => dispatch(setPage("viz"))}>
+        <Button size="small" color="gray" onClick={() => dispatch(setPage("viz"))}>
           Ticker
         </Button>
-        <Button size="small" inverted color="orange" onClick={() => dispatch(setPage("about"))}>
+        <Button size="small" color="gray" onClick={() => dispatch(setPage("about"))}>
           About
         </Button>
-        <Button size="small" inverted color="orange" onClick={() => dispatch(setPage("donation"))}>
+        <Button size="small" color="gray" onClick={() => dispatch(setPage("donation"))}>
           Donation
         </Button>
-        <Button circular size="mini" color="orange" icon="discord" />
-        <Button circular size="mini" color="orange" icon="twitter" />
-        <Button circular size="mini" color="orange" icon="patreon" />
+        <Button circular size="mini" color="gray" icon="discord" />
+        <Button circular size="mini" color="gray" icon="twitter" />
+        <Button circular size="mini" color="gray" icon="patreon" />
       </div>
     </div>
   );
