@@ -1,11 +1,14 @@
 a.fLink {
-    color : white; 
-
+    color: white;
 }
 
 a.fLink:hover {
-    color : "#FF6633"; 
-    
+    color: "#FF6633";
+}
+
+a:hover {
+    cursor: pointer;
+    color: "#FF6633";
 }
 
 .ListText {
@@ -149,13 +152,12 @@ tbody tr {
 
 .donationTitle {
     padding-bottom: 1.4em;
-    padding-top: 1.4em;
     text-align: center;
 }
 
 .textBody {
-    padding-left: 10em;
-    padding-right: 10em;
+    padding-left: 5em;
+    padding-right: 5em;
     font-size: 1.1em;
 }
 
@@ -186,7 +188,7 @@ tbody tr {
 }
 
 .FooterLower {
-    color :rgb(255, 255, 255);
+    color: rgb(255, 255, 255);
     display: grid;
     grid-gap: 50px;
     padding-bottom: 1.4em;
