@@ -30,26 +30,18 @@ export const AboutGrid = () => {
     <div className={page == "about" ? "VizGrid fadeIn" : "VizGrid fadeOut"}>
       <div className="viz_wide">
         <div className="donationTitle">
-          <h1>About the project. </h1>
+          <h1>Hey, welcome to catchfire.finance! </h1>
         </div>
         <div className="textBody">
-          Hey, welcome to catchfire.finance ! Here you can find real-time data about what is being talked about over
-          social media in the world of finance. Our goal here is to not only give insights about what is being talked
-          about, but give a general sense of how people are talking about certain keywords by using AIML to see if
-          Nothing on this site is meant to be investment advice, but could provide insight into where to start
-          researching into gaining new and novel insights. The Home page provides holistic data on all keywords analyzed
-          on this site, while the Ticker page provides more in-depth information about the selected keywords in the
-          search bar. Each graphic has an explanation slider which will give more detail about what is being displayed
-          in the graphic.
-        </div>
-        <div className="donationTitle">
-          <h1>About the mission. </h1>
-        </div>
-        <div className="textBody">
-          Hey, welcome to catchfire.finance ! Here you can find real-time data about what is being talked about over
-          social media in the world of finance. Our goal here is to not only give insights about what is being talked
-          about, but give a general sense of how people are talking about certain keywords by using AIML to see if
-          statements are either joy, fear, anger, sadness, confident, tentative, or analytical in nature.
+          Here you can find real-time data about what is being talked about over social media in the world of finance.
+          Our goal here is to give insights about what is being discussed and give a general sense of how people are
+          talking about it through seven core human emotions: Joy, Fear, Anger, Sadness, Confidence, Tentativeness, and
+          Analysis.
+          <br></br><br></br>Nothing on this site is meant to be investment advice. Still, it could provide insight into where to
+          start researching to gain new and novel insights. The Home page offers holistic data on all keywords analyzed
+          on this site. In contrast, the Ticker page provides more in-depth information about the selected keywords in
+          the search bar. Each graphic has an explanation slider which will give more detail about what is being
+          displayed. Thanks for checking the site out!
         </div>
         <div className="donation"></div>
       </div>{" "}
