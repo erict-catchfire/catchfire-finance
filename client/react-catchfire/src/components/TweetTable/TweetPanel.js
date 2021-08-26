@@ -3,7 +3,18 @@ import { useSelector, useDispatch } from "react-redux";
 import { Table } from "semantic-ui-react";
 import _ from "lodash";
 
-const tableColumns = ["Date", "Ticker", "Joy", "Fear", "Anger", "Sadness", "Confident", "Tentative", "Analytical", "Total"];
+const tableColumns = [
+  "Date",
+  "Ticker",
+  "Joy",
+  "Fear",
+  "Anger",
+  "Sadness",
+  "Confident",
+  "Tentative",
+  "Analytical",
+  "Total",
+];
 const tableColumnsMap = {
   Date: "date",
   Ticker: "ticker",
@@ -19,25 +30,16 @@ const tableColumnsMap = {
 
 export const TweetPanel = () => {
   const dataItems = useSelector((state) => state.textCollection);
-  const dataKeys = Object.keys(dataItems);
+  //const dataKeys = Object.keys(dataItems);
   const dispatch = useDispatch();
 
-  const { column, data, direction } = useSelector(
-    (state) => state.textCollection
-  );
+  const { column, data, direction } = useSelector((state) => state.textCollection);
 
-  const width = 1024 - 30;
+  //const width = 1024 - 30;
 
   return (
     <div className="TweetPanel">
-      <Table
-        striped
-        role="grid"
-        aria-labelledby="header"
-        compact="very"
-        size="small"
-        sortable={true}
-      >
+      <Table striped role="grid" aria-labelledby="header" compact="very" size="small" sortable={true}>
         <Table.Header>
           <Table.Row>
             {tableColumns.map((col) => (

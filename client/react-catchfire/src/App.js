@@ -8,7 +8,6 @@ import { AboutGrid } from "./components/AboutGrid";
 import { PPGrid } from "./components/PPGrid";
 import { TandMGrid } from "./components/TandMGrid";
 import { DonationGrid } from "./components/DonationGrid";
-import { useSelector } from "react-redux";
 import background from "./background.png";
 
 const footerHeight = 200;
@@ -18,7 +17,6 @@ const logoWidth = 270;
 function App() {
   const innerWidth = window.innerWidth;
   const innerHeight = window.innerHeight;
-  const page = useSelector((state) => state.page);
 
   return (
     <div className="App">

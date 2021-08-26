@@ -27,18 +27,15 @@ export const ControlPanal = () => {
   return (
     <div className="ControlPanal">
       <div className="ListBox">
-        <List divided verticalAlign="middle">
+        <List divided>
           {controlKeys.map((key) => (
             <SelectionItem key={key} id={key} />
           ))}
         </List>
       </div>
-      <Button           
-          className="AddButton"
-          basic
-          size='mini'
-          color='orange'
-          onClick={() => dispatch(addEmptyLineObject())}>Add Line</Button>
+      <Button className="AddButton" basic size="mini" color="orange" onClick={() => dispatch(addEmptyLineObject())}>
+        Add Line
+      </Button>
     </div>
   );
 };

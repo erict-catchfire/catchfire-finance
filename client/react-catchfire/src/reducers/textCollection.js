@@ -8,8 +8,6 @@ const textCollectionReducer = (
   },
   action
 ) => {
-  let newState = Object.assign({}, state);
-
   switch (action.type) {
     case "CHANGE_TWEET_SORT":
       if (state.column === action.column) {
@@ -27,8 +25,8 @@ const textCollectionReducer = (
         direction: "ascending",
       };
     case "ADD_TEXT_DATA_AT_ID":
-      console.log(action.id)
-      console.log(action.payload)
+      //console.log(action.id)
+      //console.log(action.payload)
 
       action.payload.forEach(element => {
         state["data"].push({

@@ -11,6 +11,11 @@ a:hover {
     color: "#FF6633";
 }
 
+.GraphPanalP:hover {
+    cursor: crosshair;
+    color: "#FF6633";
+}
+
 .ListText {
     padding-top: 5px;
 }

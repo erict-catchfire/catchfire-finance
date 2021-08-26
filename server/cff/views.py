@@ -105,6 +105,7 @@ def get_price_timeseries():
     data = iex.chartDF(ticker, closeOnly=True, timeframe="1y").reset_index()
 
     data["date"] = data["date"].dt.strftime("%Y-%m-%d")
+    data = data.iloc[::-1]
 
     return jsonify(data[["close", "date"]].to_dict("records"))
 
@@ -118,6 +119,7 @@ def get_volume_timeseries():
     data = iex.chartDF(ticker, closeOnly=True, timeframe="1y").reset_index()
 
     data["date"] = data["date"].dt.strftime("%Y-%m-%d")
+    data = data.iloc[::-1]
 
     return jsonify(data[["volume", "date"]].to_dict("records"))
 

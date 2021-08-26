@@ -1,37 +1,42 @@
 //import React, { useEffect, useState } from 'react';
 import React from "react";
 import { useSelector } from "react-redux";
-import { Card, Image, Button, Icon } from "semantic-ui-react";
+import { Card, Image, Icon } from "semantic-ui-react";
 import abstractlogo from "../about512.png";
 
 export const AboutGrid = () => {
   const page = useSelector((state) => state.page);
 
   const ericExtra = (
-    <a>
+    <>
       <Icon name="angle right" />
-      <a class="donate-with-crypto" target="_blank" href="https://www.imjustageek.com">
+      <a className="donate-with-crypto" target="_blank" rel="noreferrer" href="https://www.imjustageek.com">
         {" "}
         Come check out my personal site.
       </a>
-    </a>
+    </>
   );
 
   const jearlsExtra = (
-    <a>
+    <>
       <Icon name="angle right" />
-      <a class="donate-with-crypto" target="_blank" href="https://www.linkedin.com/in/jonathanearles/">
+      <a
+        className="donate-with-crypto"
+        target="_blank"
+        rel="noreferrer"
+        href="https://www.linkedin.com/in/jonathanearles/"
+      >
         {" "}
         Come check out my LinkedIn.
       </a>
-    </a>
+    </>
   );
 
   return (
-    <div className={page == "about" ? "VizGrid fadeIn" : "VizGrid fadeOut"}>
+    <div className={page === "about" ? "VizGrid fadeIn" : "VizGrid fadeOut"}>
       <div className="viz_nar" style={{ margin: "auto" }}>
         <div className="donationTitle">
-          <h1>Hey, Welcome to catchfire.finance! </h1>
+          <h1>Hey, welcome to catchfire.finance! </h1>
         </div>
         <div className="textBody">
           Here you can find real-time data about what is being talked about over social media in the world of finance.

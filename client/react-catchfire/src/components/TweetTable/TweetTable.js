@@ -6,8 +6,6 @@ import { useSelector, useDispatch } from "react-redux";
 import { addTextAtId, modifyTextObject, toggleTextDimmer } from "../../actions";
 import { Dimmer } from "semantic-ui-react";
 
-import _ from "lodash";
-
 const lengthDict = {
   week: 7,
   month: 31,
@@ -57,14 +55,14 @@ const GetTableData = (keyword, length, sentiment, amount, dispatch, element) => 
 export const TweetTable = () => {
   const dispatch = useDispatch();
   const controlItems = useSelector((state) => state.dataText);
-  const dataItems = useSelector((state) => state.textCollection);
+  //const dataItems = useSelector((state) => state.textCollection);
   const controlKeys = Object.keys(controlItems);
   const dimmerState = useSelector((state) => state.textDimmer);
 
   useEffect(() => {
     controlKeys.forEach((element) => {
       if (controlItems[element].dirty && controlItems[element].keyword) {
-        const data = GetTableData(
+        GetTableData(
           controlItems[element].keyword,
           controlItems[element].length,
           controlItems[element].dataName,
