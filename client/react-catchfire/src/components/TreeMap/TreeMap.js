@@ -3,7 +3,7 @@ import { InfoBar } from "../InfoBar";
 import { toggleTreeMapDimmer } from "../../actions";
 import { TreeMapPanel } from "./TreeMapPanel";
 import { Dimmer } from "semantic-ui-react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 
 export const TreeMap = () => {
   const dimmerState = useSelector((state) => state.treemapDimmer);

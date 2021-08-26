@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { Card, Image, Button, Icon } from "semantic-ui-react";
+import { Card, Icon } from "semantic-ui-react";
 import patreon from "../patreon_mod.png";
 import coinbase from "../coinbase_mod.png";
 import bmac from "../bmac_mod.png";
@@ -17,42 +17,43 @@ export const DonationGrid = () => {
   ];
 
   const coinbaseExtra = (
-    <a>
+    <>
       <Icon name="angle right" />
       <a
-        class="donate-with-crypto"
+        className="donate-with-crypto"
         target="_blank"
+        rel="noreferrer"
         href="https://commerce.coinbase.com/checkout/a46ac12c-44a7-494a-9f53-335ba8d0dd6b"
       >
         {" "}
         Donate with Cash or Crypto
       </a>
       <script src="https://commerce.coinbase.com/v1/checkout.js?version=201807"></script>
-    </a>
+    </>
   );
 
   const patronExtra = (
-    <a>
+    <>
       <Icon name="angle right" />
-      <a class="donate-with-pat" target="_blank" href="https://www.patreon.com/catchfirefinance">
+      <a className="donate-with-pat" target="_blank" rel="noreferrer" href="https://www.patreon.com/catchfirefinance">
         {" "}
         Donate through Patreon
       </a>
-    </a>
+    </>
   );
 
   const bmacExtra = (
-    <a>
+    <>
       <Icon name="angle right" />
-      <a class="donate-with-coffee" target="_blank" href="https://www.buymeacoffee.com/catchfire">
+      <a className="donate-with-coffee" target="_blank" rel="noreferrer" href="https://www.buymeacoffee.com/catchfire">
         {" "}
         Donate with Buy Me a Coffee
       </a>
-    </a>
+    </>
   );
 
   return (
-    <div className={page == "donation" ? "VizGrid fadeIn" : "VizGrid fadeOut"}>
+    <div className={page === "donation" ? "VizGrid fadeIn" : "VizGrid fadeOut"}>
       <div className="viz_wide">
         <div className="donationTitle" style={{ paddingTop: "3.4em" }}>
           <h1>Help keep this site going. </h1>

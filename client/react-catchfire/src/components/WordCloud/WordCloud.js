@@ -3,7 +3,7 @@ import { InfoBar } from "../InfoBar";
 import { toggleWordCloudDimmer } from "../../actions";
 import { WordCloudPanal } from "./WordCloudPanel";
 import { Dimmer } from "semantic-ui-react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 
 export const WordCloud = () => {
   const dimmerState = useSelector((state) => state.wordcloudDimmer);

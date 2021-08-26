@@ -1,9 +1,6 @@
 //import React, { useEffect, useState } from 'react';
-import React, { useEffect } from "react";
+import React from "react";
 import { useSelector } from "react-redux";
-import { DataTable } from "./DataTable";
-import { LineGraph } from "./LineGraph/LineGraph";
-import { TweetTable } from "./TweetTable/TweetTable";
 
 export const TandMGrid = () => {
   const page = useSelector((state) => state.page);
@@ -261,7 +258,7 @@ export const TandMGrid = () => {
             By email:{" "}
             <a
               href="/cdn-cgi/l/email-protection"
-              class="__cf_email__"
+              className="__cf_email__"
               data-cfemail="a5c6cacbd1c4c6d1e5c6c4d1c6cdc3ccd7c08bc3cccbc4cbc6c0"
             >
               [email&#160;protected]

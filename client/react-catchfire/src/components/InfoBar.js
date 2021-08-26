@@ -5,14 +5,6 @@ import { Radio, Popup } from "semantic-ui-react";
 export const InfoBar = ({ toggleFunction }) => {
   const dispatch = useDispatch();
 
-  const RadioDiv = () => {
-    <div className="radioDiv">
-      <Radio slider size="mini" onClick={() => dispatch(toggleFunction)}>
-        Info
-      </Radio>
-    </div>;
-  };
-
   return (
     <div className="InfoBar">
       <div className="textDiv"></div>

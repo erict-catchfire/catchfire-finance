@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { GraphPanal } from "./GraphPanal";
 import { ControlPanal } from "./ControlPanal";
 import { InfoBar } from "../InfoBar";
 import { useSelector, useDispatch } from "react-redux";
 import { addDataAtId, modifyLineObject, toggleChartDimmer } from "../../actions";
-import _ from "lodash";
 import { Dimmer } from "semantic-ui-react";
 
 const GetSentimentData = (keyword, sentiment, element, dispatch) => {
@@ -17,7 +16,7 @@ const GetSentimentData = (keyword, sentiment, element, dispatch) => {
     },
     body: JSON.stringify({
       ticker: keyword,
-      length: 75,
+      length: 365,
       sentiment: sentiment,
     }),
   }).then((response) => {
@@ -47,7 +46,7 @@ const GetPriceData = (keyword, element, dispatch) => {
     },
     body: JSON.stringify({
       ticker: keyword,
-      length: 75,
+      length: 365,
     }),
   }).then((response) => {
     response.json().then((return_data) => {
@@ -76,7 +75,7 @@ const GetVolumeData = (keyword, element, dispatch) => {
     },
     body: JSON.stringify({
       ticker: keyword,
-      length: 75,
+      length: 365,
     }),
   }).then((response) => {
     response.json().then((return_data) => {
@@ -105,7 +104,7 @@ export const LineGraph = () => {
   useEffect(() => {
     controlKeys.forEach((element) => {
       if ((dataItems[element] === undefined || controlItems[element].dirty) && controlItems[element].keyword) {
-        console.log("GET DATA FOR : ", controlItems[element].keyword, controlItems[element].dataName);
+        //console.log("GET DATA FOR : ", controlItems[element].keyword, controlItems[element].dataName);
 
         let data;
 
@@ -137,7 +136,7 @@ export const LineGraph = () => {
           case "price":
             data = GetPriceData(controlItems[element].keyword, element, dispatch);
             break;
-          case "volume":
+          default:
             data = GetVolumeData(controlItems[element].keyword, element, dispatch);
             break;
         }
