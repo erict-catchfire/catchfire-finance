@@ -6,20 +6,17 @@ import click
 import re
 
 from reticker import TickerExtractor, TickerMatchConfig
-from flask_sqlalchemy import SQLAlchemy
 import pyEX as px
 from sqlalchemy import text
 from sqlalchemy.ext.indexable import index_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 
-from cff import config
+from cff import config, db
 from cff.constants import CryptoList
 
 CRYPTO_LIST = CryptoList().map
 iex = px.Client(api_token=config.IEX_TOKEN, version=config.IEX_ENV)
-
-db = SQLAlchemy()
 
 
 class Base(db.Model):
