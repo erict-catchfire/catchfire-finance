@@ -1,0 +1,25 @@
+version: '3.7'
+
+services:
+    server:
+        build:
+            context: ./server
+            dockerfile: ./Dockerfile
+        image: "cf-server"
+        ports:
+            - "5000:5000"
+        environment:
+            - IEX_SANDBOX=${IEX_SANDBOX}
+            - IEX_PROD=${IEX_PROD}
+    client:
+        build:
+            context: ./client/react-catchfire
+            dockerfile: ./Dockerfile
+        image: "cf-client"
+        volumes:
+            - '.:/app'
+            - '/app/node_modules'
+        ports:
+            - "3000:3000"
+        links:
+            - "server"

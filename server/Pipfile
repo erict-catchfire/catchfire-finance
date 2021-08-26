@@ -23,6 +23,10 @@ jsbeautifier = "==1.13.13"
 tensorflow = "==2.5.0"
 sklearn = "*"
 tensorflow-text = "==2.5.0"
+gunicorn = "==20.1.0"
+gevent = "*"
+psycogreen = "*"
+psycopg2-binary = "*"
 
 [dev-packages]
 ipython = "*"
@@ -30,6 +34,9 @@ line-profiler = "*"
 
 [requires]
 python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true
 
 [packages.snscrape]
 git = "https://github.com/JustAnotherArchivist/snscrape.git"
