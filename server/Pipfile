@@ -27,6 +27,7 @@ gunicorn = "==20.1.0"
 gevent = "*"
 psycogreen = "*"
 psycopg2-binary = "*"
+bs4 = "*"
 
 [dev-packages]
 ipython = "*"
