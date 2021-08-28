@@ -20,5 +20,5 @@ yarn-error.log
 
 server/temp
 server/cff/modeling/*
-!server/cff/modeling/__init__.py
+!server/cff/modeling/__init__.pys
 gunicorn.log

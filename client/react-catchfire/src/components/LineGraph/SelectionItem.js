@@ -1,7 +1,7 @@
 import React from "react";
 import { removeLineObject, modifyLineObject, removeDataAtId } from "../../actions";
 import { useSelector, useDispatch } from "react-redux";
-import { Button, Dropdown, List, ListContent, Loader } from "semantic-ui-react";
+import { Button, Dropdown, List, ListContent, Loader, Grid } from "semantic-ui-react";
 
 export const SelectionItem = ({ id }) => {
   const dispatch = useDispatch();
@@ -73,22 +73,26 @@ export const SelectionItem = ({ id }) => {
   };
 
   return (
-    <List.Item>
+    <List.Item verticalAlign="middle">
       <List.Content floated="right">
         <Button
+          basic
+          size="mini"
+          color="orange"
           onClick={() => {
             dispatch(removeLineObject(id));
             dispatch(removeDataAtId(id));
           }}
         >
-          -
+          Remove Line
         </Button>
       </List.Content>
-      <ListContent floated="left">
+      <List.Content className="ListText">
         For{" "}
         <Dropdown
           floating
           inline
+          upward
           options={keyWordOptions}
           defaultValue={defaultKeyword}
           onChange={handleKeywordDropdownChange}
@@ -97,6 +101,7 @@ export const SelectionItem = ({ id }) => {
         <Dropdown
           floating
           inline
+          upward
           options={dataOptions}
           defaultValue={defaultData}
           onChange={handleDataDropdownChange}
@@ -105,6 +110,7 @@ export const SelectionItem = ({ id }) => {
         <Dropdown
           floating
           inline
+          upward
           options={colorOptions}
           defaultValue={defaultColor}
           onChange={handleColorDropdownChange}
@@ -113,13 +119,14 @@ export const SelectionItem = ({ id }) => {
         <Dropdown
           floating
           inline
+          upward
           options={patternOptions}
           defaultValue={defaultPattern}
           onChange={handlePatternDropdownChange}
         />{" "}
-        pattern. {"  " + id + " "}
+        pattern.{"  "}
         <Loader active={dataItems[id] === undefined} inline size="mini" />
-      </ListContent>
+      </List.Content>
     </List.Item>
   );
 };

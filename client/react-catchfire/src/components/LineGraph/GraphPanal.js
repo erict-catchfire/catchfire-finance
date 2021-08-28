@@ -17,17 +17,36 @@ const colorNametoHex = {
   cyan: "#99CCCC",
 };
 
+const dataNametoTitle = {
+  joy_twitter_sentiment: "Joy Sentiment",
+  fear_twitter_sentiment: "Fear Sentiment",
+  anger_twitter_sentiment: "Anger Sentiment",
+  sadness_twitter_sentiment: "Sadness Sentiment",
+  confident_twitter_sentiment: "Confident Sentiment",
+  tentative_twitter_sentiment: "Tentative Sentiment",
+  analytical_twitter_sentiment: "Analytical Sentiment",
+  all_twitter_sentiment: "All Sentiment",
+  price: "Price ($)",
+  volume: "Volume ($)",
+};
+
+const patternToArray = {
+  solid: ("1", "0"),
+  dashed: ("5", "5"),
+  dotted: ("2", "2"),
+};
+
 const LineChart = ({ width, height, data }) => {
   const limits = useSelector((state) => state.lineGraph);
   const controlItems = useSelector((state) => state.dataLine);
   const dispatch = useDispatch();
 
-  const margin = { top: 15, right: 25, bottom: 100, left: 25 };
+  const margin = { top: 15, right: 25, bottom: 100, left: 35 };
   const margin2 = {
     top: height - margin.top - margin.bottom + 45,
     right: 25,
     bottom: 40,
-    left: 25,
+    left: 35,
   };
 
   const innerHeight = height - margin.top - margin.bottom;
@@ -42,34 +61,37 @@ const LineChart = ({ width, height, data }) => {
       .attr("height", height)
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
-  }, []);
+  }, [width, height, margin.left, margin.top]);
 
   useEffect(() => {
     const svg = d3.select(ref.current);
-    const brush = svg.select(".context").select(".brush");
     const chart = svg.select("g");
     const context = svg.select(".context");
-
     const dataKeys = Object.keys(data);
 
     if (Object.keys(data).length !== 0) {
-      const chLines = chart.selectAll(".line").each(function () {
+      chart.selectAll(".line").each(function () {
         if (!dataKeys.includes(this.id)) {
           this.remove();
         }
       });
-      const cLines = context.selectAll(".line").each(function () {
+      context.selectAll(".line").each(function () {
         if (!dataKeys.includes(this.id)) {
           this.remove();
         }
       });
-
-      drawChart(limits.valid, limits.start, limits.end);
-    } else {
-      const chLines = chart.selectAll(".line").each(function () {
+      svg.selectAll(".tool").each(function () {
         this.remove();
       });
-      const cLines = context.selectAll(".line").each(function () {
+      drawChart(limits.valid, limits.start, limits.end);
+    } else {
+      chart.selectAll(".line").each(function () {
+        this.remove();
+      });
+      context.selectAll(".line").each(function () {
+        this.remove();
+      });
+      svg.selectAll(".tool").each(function () {
         this.remove();
       });
     }
@@ -83,7 +105,7 @@ const LineChart = ({ width, height, data }) => {
       .attr("id", "clip")
       .append("svg:rect")
       .attr("width", innerWidth)
-      .attr("height", innerHeight)
+      .attr("height", innerWidth)
       .attr("x", 0)
       .attr("y", 0);
 
@@ -281,12 +303,15 @@ const LineChart = ({ width, height, data }) => {
             })
         )
         .attr("stroke", (d) => (controlItems[d.id] == null ? "white" : colorNametoHex[controlItems[d.id].color]))
-        .style("stroke-width", 2)
+        .attr("stroke-width", 2)
+        .attr("stroke-dasharray", (d) =>
+          controlItems[d.id] == null ? "none" : patternToArray[controlItems[d.id].pattern]
+        )
         .style("fill", "none");
     }
 
     function updateContext(data) {
-      const c = context.selectAll(".line").data(data);
+      const c = context.selectAll(".line").data(data).attr("clip-path", "url(#clip)");
 
       c.enter()
         .append("path")
@@ -310,12 +335,87 @@ const LineChart = ({ width, height, data }) => {
             })
         )
         .attr("stroke", (d) => (controlItems[d.id] == null ? "white" : colorNametoHex[controlItems[d.id].color]))
-        .style("stroke-width", 1)
+        .style("stroke-width", 30)
         .style("fill", "none");
     }
 
     update(values(data));
     updateContext(values(data));
+
+    //Tool Tip
+    let tooltip = svg
+      .append("g")
+      .attr("class", "tool")
+      .append("foreignObject")
+      .attr("width", 1000)
+      .attr("height", 100)
+      .style("opacity", 0);
+
+    let vert = svg
+      .append("g")
+      .attr("class", "tool")
+      .append("rect")
+      .attr("width", 1)
+      .attr("height", innerHeight)
+      .style("opacity", 0)
+      .attr("transform", `translate(0, -15)`);
+
+    const mouseover = (event, d) => {
+      tooltip.style("opacity", 1);
+      vert.style("opacity", 1);
+    };
+
+    const mouseleave = (event, d) => {
+      tooltip.style("opacity", 0);
+      vert.style("opacity", 0);
+    };
+
+    const mousemove = (event, d) => {
+      const [x, y] = d3.pointer(event);
+
+      let date = xScale.invert(x - margin.left);
+      let markers = [];
+
+      dataKeys.forEach((d) => {
+        let obj = data[d][0];
+        data[d].forEach((datum) => {
+          if (datum.time < date) {
+            obj = datum;
+          }
+        });
+
+        markers.push({
+          keyword: controlItems[d].keyword,
+          name: controlItems[d].dataName,
+          time: obj.time,
+          data: obj.data,
+        });
+      });
+
+      if (yScale.invert(y - margin.top) >= 0 && x - margin.left >= 0) {
+        let string = " Date: " + date.toLocaleString();
+        tooltip.html(string);
+        markers.forEach((d) => {
+          string += "<br></br>" + " " + d.keyword + " " + dataNametoTitle[d.name] + ": " + d.data;
+        });
+        tooltip.html(string);
+      } else {
+        vert.style("opacity", 0);
+        tooltip.html("");
+      }
+
+      let xTextOffset;
+      if (x > 0.7 * innerWidth) {
+        xTextOffset = -190;
+      } else {
+        xTextOffset = 15;
+      }
+
+      vert.attr("transform", `translate(${x - 1}, 15)`);
+      tooltip.attr("transform", `translate(${x + xTextOffset}, ${y + 15})`);
+    };
+
+    svg.on("mousemove", mousemove).on("mouseleave", mouseleave).on("mouseover", mouseover);
 
     // Need to always clip at the end for some reason.
     chart.selectAll(".line").attr("clip-path", "url(#clip)");
@@ -332,11 +432,10 @@ export const GraphPanal = () => {
   const dataItems = useSelector((state) => state.dataCollection);
   const dataKeys = Object.keys(dataItems);
 
-  // Lol Magic Numbers
-  const width = 1024 - 30;
+  const width = 1096;
 
   return (
-    <div className="GraphPanal">
+    <div className="GraphPanalP">
       <LineChart width={width} height={width / 1.9} data={dataItems} />
     </div>
   );

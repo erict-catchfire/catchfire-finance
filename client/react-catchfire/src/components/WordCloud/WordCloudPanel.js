@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 
-const duration = 500;
-
 const GetWords = () => {
   const [data, setData] = useState([]);
 
@@ -12,7 +10,7 @@ const GetWords = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ days: 5 }),
+      body: JSON.stringify({ days: 14 }),
     }).then((response) => {
       response.json().then((data) => {
         const toSet = [];
@@ -34,8 +32,6 @@ const GetWords = () => {
 
 const WordCloudCanvas = ({ width, height, data }) => {
   const margin = { top: 15, right: 25, bottom: 100, left: 25 };
-  const innerHeight = height - margin.top - margin.bottom;
-  const innerWidth = width - margin.left - margin.right;
 
   const ref = useRef();
 
@@ -70,12 +66,12 @@ const WordCloudCanvas = ({ width, height, data }) => {
 
     var color = d3
       .scaleOrdinal()
-      .domain([0, 7])
+      .domain(["joy", "fear", "anger", "sadness", "confident", "tentative", "analytical", "none"])
       .range(["#FF3333", "#336699", "#993366", "#339933", "#FF6633", "#FF99CC", "#99CCCC", "#333333"]);
 
     var sentText = d3
       .scaleOrdinal()
-      .domain([0, 7])
+      .domain(["joy", "fear", "anger", "sadness", "confident", "tentative", "analytical", "none"])
       .range(["Joy", "Fear", "Anger", "Sadness", "Confident", "Tentative", "Analytical", "None"]);
 
     // create a tooltip

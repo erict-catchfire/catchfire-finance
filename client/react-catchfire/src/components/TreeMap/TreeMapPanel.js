@@ -1,8 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
-import { group } from "d3";
-
-const duration = 500;
 
 const GetTopTickers = (sentiment) => {
   const [data, setData] = useState([]);
@@ -41,7 +38,7 @@ const GetTopTickers = (sentiment) => {
 const TreeMapCanvas = ({ width, height, data }) => {
   const margin = { top: 0, right: 0, bottom: 0, left: 3 };
   const innerHeight = height - margin.top - margin.bottom;
-  const innerWidth = width - margin.left - margin.right;
+  //const innerWidth = width - margin.left - margin.right;
   let svg;
   const ref = useRef();
 

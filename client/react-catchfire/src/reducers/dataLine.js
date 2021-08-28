@@ -8,7 +8,7 @@ const dataLineReducer = (state = {}, action) => {
     case "ADD_EMPTY_LINE_OBJECT":
       newItem = {
         keyword: null,
-        dataName: "happy_twitter_sentiment",
+        dataName: "all_twitter_sentiment",
         color: "red",
         pattern: "solid",
         dirty: false,
@@ -20,7 +20,7 @@ const dataLineReducer = (state = {}, action) => {
     case "ADD_LINE_OBJECT_KEYWORD":
       newItem = {
         keyword: action.payload,
-        dataName: "happy_twitter_sentiment",
+        dataName: "all_twitter_sentiment",
         color: "red",
         pattern: "solid",
         dirty: false,

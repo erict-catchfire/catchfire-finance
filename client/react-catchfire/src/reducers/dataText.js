@@ -8,8 +8,8 @@ const dataTextReducer = (state = {}, action) => {
     case "ADD_EMPTY_TEXT_OBJECT":
       newItem = {
         keyword: null,
-        dataName: "ats",
-        length: "day",
+        dataName: "all",
+        length: "week",
         amount: "5",
         dirty: true
       };
@@ -20,8 +20,8 @@ const dataTextReducer = (state = {}, action) => {
     case "ADD_TEXT_OBJECT_KEYWORD":
       newItem = {
         keyword: action.payload,
-        dataName: "ats",
-        length: "day",
+        dataName: "all",
+        length: "week",
         amount: "5",
         dirty: true
       };

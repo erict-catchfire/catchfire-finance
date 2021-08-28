@@ -1,33 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { GraphPanal } from "./GraphPanal";
 import { ControlPanal } from "./ControlPanal";
 import { InfoBar } from "../InfoBar";
 import { useSelector, useDispatch } from "react-redux";
 import { addDataAtId, modifyLineObject, toggleChartDimmer } from "../../actions";
-import _ from "lodash";
 import { Dimmer } from "semantic-ui-react";
-
-// const randomDate = (start, end, startHour, endHour) => {
-//   var date = new Date(+start + Math.random() * (end - start));
-//   var hour = (startHour + Math.random() * (endHour - startHour)) | 0;
-//   date.setHours(hour);
-//   return date;
-// };
-
-// const randomTimeSeries = (maxValue, nEntries, start, end) => {
-//   let data = [];
-
-//   for (let i = 0; i < nEntries; i++) {
-//     data.push({
-//       data: Math.random() * maxValue,
-//       time: randomDate(start, end, 0, 24),
-//     });
-//   }
-
-//   let newData = _.sortBy(data, (d) => d.time);
-
-//   return newData;
-// };
 
 const GetSentimentData = (keyword, sentiment, element, dispatch) => {
   let to_return = [];
@@ -39,7 +16,7 @@ const GetSentimentData = (keyword, sentiment, element, dispatch) => {
     },
     body: JSON.stringify({
       ticker: keyword,
-      length: 75,
+      length: 365,
       sentiment: sentiment,
     }),
   }).then((response) => {
@@ -69,7 +46,7 @@ const GetPriceData = (keyword, element, dispatch) => {
     },
     body: JSON.stringify({
       ticker: keyword,
-      length: 75,
+      length: 365,
     }),
   }).then((response) => {
     response.json().then((return_data) => {
@@ -98,7 +75,7 @@ const GetVolumeData = (keyword, element, dispatch) => {
     },
     body: JSON.stringify({
       ticker: keyword,
-      length: 75,
+      length: 365,
     }),
   }).then((response) => {
     response.json().then((return_data) => {
@@ -127,7 +104,7 @@ export const LineGraph = () => {
   useEffect(() => {
     controlKeys.forEach((element) => {
       if ((dataItems[element] === undefined || controlItems[element].dirty) && controlItems[element].keyword) {
-        console.log("GET DATA FOR : ", controlItems[element].keyword, controlItems[element].dataName);
+        //console.log("GET DATA FOR : ", controlItems[element].keyword, controlItems[element].dataName);
 
         let data;
 
@@ -159,7 +136,7 @@ export const LineGraph = () => {
           case "price":
             data = GetPriceData(controlItems[element].keyword, element, dispatch);
             break;
-          case "volume":
+          default:
             data = GetVolumeData(controlItems[element].keyword, element, dispatch);
             break;
         }
@@ -171,7 +148,24 @@ export const LineGraph = () => {
     <>
       <Dimmer.Dimmable blurring dimmed={dimmerState}>
         <Dimmer active={dimmerState}>
-          <div>HELP TEXT OR IMAGE</div>
+          <div className="donationTitle">
+            <h1> Line Graph </h1>
+          </div>
+          <h3> Graph Panel </h3>
+          <div className="textBody">
+            The top of this component shows the selected data items from the control panel below.
+          </div>
+          <h3> Control Panel </h3>
+          <div className="textBody">
+            The bottom half contains the control panal which consists of data items to display on the graph. For each
+            data item you can select which ticker you want to see data for, the type of data for that ticker, the color
+            of the line, and the shape of that line. You can add and remove data items through the buttons to the right
+            and bottom.
+          </div>
+          <div className="textBody">
+            <br></br>
+            You can only select to show data from tickers in the search bar above.
+          </div>
         </Dimmer>
         <div className="LineGraph">
           <GraphPanal />

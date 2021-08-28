@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  removeTextObject,
-  modifyTextObject,
-  removeTextAtId,
-} from "../../actions";
+import { removeTextObject, modifyTextObject, removeTextAtId } from "../../actions";
 import { useSelector, useDispatch } from "react-redux";
 import { Button, Dropdown, List, ListContent, Loader } from "semantic-ui-react";
 
@@ -24,13 +20,17 @@ export const SelectionItem = ({ id }) => {
   });
 
   const dataOptions = [
-    { key: "rts", text: "random twitter sentiment", value: "ats" },
-    { key: "ants", text: "top angry twitter sentiment", value: "ants" },
-    { key: "gts", text: "top good twitter sentiment", value: "gts" },
+    { key: "all", text: "most mentions", value: "all" },
+    { key: "joy", text: "most joy mentions", value: "joy" },
+    { key: "anger", text: "most anger mentions", value: "anger" },
+    { key: "sad", text: "most sad mentions", value: "sad" },
+    { key: "confident", text: "most confident mentions", value: "confident" },
+    { key: "tentative", text: "most tentative mentions", value: "tentative" },
+    { key: "analytical", text: "most analytical mentions", value: "analytical" },
   ];
 
   const lengthOptions = [
-    { key: "day", text: "day", value: "day" },
+    { key: "week", text: "week", value: "week" },
     { key: "month", text: "month", value: "month" },
     { key: "year", text: "year", value: "year" },
   ];
@@ -47,20 +47,26 @@ export const SelectionItem = ({ id }) => {
   const defaultAmount = controlItems[id].amount;
 
   const handleKeywordDropdownChange = (e, { value }) => {
+    dispatch(removeTextAtId(id));
     dispatch(modifyTextObject(id, "dirty", true));
     dispatch(modifyTextObject(id, "keyword", value));
   };
 
   const handleDataDropdownChange = (e, { value }) => {
+    dispatch(removeTextAtId(id));
     dispatch(modifyTextObject(id, "dirty", true));
     dispatch(modifyTextObject(id, "dataName", value));
   };
 
   const handleLengthDropdownChange = (e, { value }) => {
+    dispatch(removeTextAtId(id));
+    dispatch(modifyTextObject(id, "dirty", true));
     dispatch(modifyTextObject(id, "length", value));
   };
 
   const handleAmountDropdownChange = (e, { value }) => {
+    dispatch(removeTextAtId(id));
+    dispatch(modifyTextObject(id, "dirty", true));
     dispatch(modifyTextObject(id, "amount", value));
   };
 
@@ -68,27 +74,32 @@ export const SelectionItem = ({ id }) => {
     <List.Item>
       <List.Content floated="right">
         <Button
+          basic
+          size="mini"
+          color="orange"
           onClick={() => {
             dispatch(removeTextObject(id));
             dispatch(removeTextAtId(id));
           }}
         >
-          -
+          Remove Set
         </Button>
       </List.Content>
-      <ListContent floated="left">
+      <ListContent floated="left" className="ListText">
         For{" "}
         <Dropdown
           floating
           inline
+          upward
           options={keyWordOptions}
           defaultValue={defaultKeyword}
           onChange={handleKeywordDropdownChange}
         />{" "}
-        , display tweets with{" "}
+        , display days with the{" "}
         <Dropdown
           floating
           inline
+          upward
           options={dataOptions}
           defaultValue={defaultData}
           onChange={handleDataDropdownChange}
@@ -97,6 +108,7 @@ export const SelectionItem = ({ id }) => {
         <Dropdown
           floating
           inline
+          upward
           options={lengthOptions}
           defaultValue={defaultLength}
           onChange={handleLengthDropdownChange}
@@ -105,11 +117,11 @@ export const SelectionItem = ({ id }) => {
         <Dropdown
           floating
           inline
+          upward
           options={amountOptions}
           defaultValue={defaultAmount}
           onChange={handleAmountDropdownChange}
         />{" "}
-        ID {"  " + id + " "}
         <Loader active={controlItems[id] === undefined} inline size="mini" />
       </ListContent>
     </List.Item>
