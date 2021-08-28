@@ -25,7 +25,7 @@ const GetTableData = () => {
         tickers: tickers,
       };
 
-      fetch("/getTableData", {
+      fetch("/api/getTableData", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

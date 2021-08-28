@@ -7,7 +7,7 @@ const GetWords = () => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    fetch("/getWords", {
+    fetch("/api/getWords", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

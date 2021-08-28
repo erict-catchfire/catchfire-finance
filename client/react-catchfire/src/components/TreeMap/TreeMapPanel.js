@@ -6,7 +6,7 @@ const duration = 500;
 
 const GetTopTickers = (sentiment) => {
   const [data, setData] = useState([]);
-  const call = "/getTopSentiment";
+  const call = "/api/getTopSentiment";
   useEffect(() => {
     fetch(call, {
       method: "POST",
