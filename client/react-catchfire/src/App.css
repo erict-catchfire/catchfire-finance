@@ -16,6 +16,14 @@ a:hover {
     color: "#FF6633";
 }
 
+.diagram-text {
+    pointer-events: none;
+}
+
+.tooltip {
+    pointer-events: none;
+}
+
 .ListText {
     padding-top: 5px;
 }

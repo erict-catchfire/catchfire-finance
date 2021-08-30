@@ -21,8 +21,9 @@ export const TreeMap = () => {
           </div>
           <div className="textBody">
             <br></br>
-            The darkness / magnitude of each circle is determined by how heavily that word is used for that emotion. If
-            it is light that word shows up equally in all emotions. If it is dark it is more exclusive for that emotion.
+            The darkness / magnitude of each circle is determined by how much of that sentiment is shown over the short
+            term (1 day) verses the long term (7 days). Dark means that the short term sentiment count is alot compared to its long term amount. Dark
+            means that short term sentiment count is small compared to its long term amount.
           </div>
         </Dimmer>
         <div className="TreeMap" style={{ paddingLeft: "5%" }}>

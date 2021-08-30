@@ -16,7 +16,7 @@ export const WordCloud = () => {
             <h1> Word Cloud </h1>
           </div>
           <div className="textBody">
-            Word cloud showing the most popular terms over the past 7 days. If you put the mouse over a circle it will
+            Word cloud showing the most popular terms over the past 2 days. If you put the mouse over a circle it will
             display the emotion most connected with mentions with that word.
           </div>
           <div className="textBody">

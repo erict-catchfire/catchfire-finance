@@ -12,8 +12,8 @@ const GetTopTickers = (sentiment) => {
       },
       body: JSON.stringify({
         sentiment: sentiment,
-        long: 31,
-        short: 7,
+        long: 7,
+        short: 1,
       }),
     }).then((response) => {
       response.json().then((data) => {
@@ -36,7 +36,7 @@ const GetTopTickers = (sentiment) => {
 };
 
 const TreeMapCanvas = ({ width, height, data }) => {
-  const margin = { top: 0, right: 0, bottom: 0, left: 3 };
+  const margin = { top: 0, right: 0, bottom: -55, left: 3 };
   const innerHeight = height - margin.top - margin.bottom;
   //const innerWidth = width - margin.left - margin.right;
   let svg;
@@ -78,7 +78,7 @@ const TreeMapCanvas = ({ width, height, data }) => {
     var color = d3
       .scaleOrdinal()
       .domain(["Joy", "Fear", "Anger", "Sadness", "Confident", "Tentative", "Analytical", "None"])
-      .range(["#FF3333", "#336699", "#993366", "#339933", "#FF6633", "#FF99CC", "#99CCCC", "#333333"]);
+      .range(["#339933", "#336699", "#993366", "#FF9090", "#FF6633", "#FF99CC", "#99CCCC", "#333333"]);
 
     var opacity = d3.scaleLinear().domain([0, 2]).range([0.5, 1]);
 
@@ -101,7 +101,9 @@ const TreeMapCanvas = ({ width, height, data }) => {
     };
 
     var mousemove = function (event, d) {
-      Tooltip.html(d.data.name + "<br>" + d.value + " mentions" + "<br>" + d.data.op + " sentiment")
+      Tooltip.html(
+        d.data.name + "<br>" + d.value + " mentions" + "<br>" + Math.round(d.data.op * 100) / 100 + " S/L Ratio"
+      )
         .style("left", d3.pointer(event)[0] + 80 + "px")
         .style("top", d3.pointer(event)[1] + "px");
     };
@@ -143,6 +145,7 @@ const TreeMapCanvas = ({ width, height, data }) => {
       .data(root.leaves())
       .enter()
       .append("text")
+      .attr("class", "diagram-text")
       .attr("x", function (d) {
         return d.x0 + 5;
       }) // +10 to adjust position (more right)
@@ -162,6 +165,7 @@ const TreeMapCanvas = ({ width, height, data }) => {
       .data(root.leaves())
       .enter()
       .append("text")
+      .attr("class", "diagram-text")
       .attr("x", function (d) {
         return d.x0 + 5;
       }) // +10 to adjust position (more right)
