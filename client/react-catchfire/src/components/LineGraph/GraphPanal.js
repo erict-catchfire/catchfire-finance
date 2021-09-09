@@ -347,7 +347,7 @@ const LineChart = ({ width, height, data }) => {
       .append("g")
       .attr("class", "tool")
       .append("foreignObject")
-      .attr("width", 1000)
+      .attr("width", 300)
       .attr("height", 100)
       .style("opacity", 0);
 
@@ -396,7 +396,7 @@ const LineChart = ({ width, height, data }) => {
         let string = " Date: " + date.toLocaleString();
         tooltip.html(string);
         markers.forEach((d) => {
-          string += "<br></br>" + " " + d.keyword + " " + dataNametoTitle[d.name] + ": " + d.data;
+          string += "<br/>" + " " + d.keyword + " " + dataNametoTitle[d.name] + ": " + d.data;
         });
         tooltip.html(string);
       } else {

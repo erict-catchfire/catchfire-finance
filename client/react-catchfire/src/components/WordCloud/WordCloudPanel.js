@@ -10,7 +10,7 @@ const GetWords = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ days: 14 }),
+      body: JSON.stringify({ days: 2 }),
     }).then((response) => {
       response.json().then((data) => {
         const toSet = [];
@@ -48,8 +48,6 @@ const WordCloudCanvas = ({ width, height, data }) => {
   }, [data]);
 
   const drawChart = () => {
-    const svg = d3.select(ref.current).append("svg").attr("width", width).attr("height", height);
-
     const maxAmount = Math.max.apply(
       Math,
       data.map((o) => o.amount)
@@ -59,15 +57,22 @@ const WordCloudCanvas = ({ width, height, data }) => {
       data.map((o) => o.count)
     );
 
+    const minCount = Math.min.apply(
+      Math,
+      data.map((o) => o.count)
+    );
+
     // TODO: Limit by height/50
-    const size = d3.scaleSqrt().domain([0, maxCount]).range([7, 80]);
+    const size = d3.scaleSqrt().domain([minCount, maxCount]).range([20, 75]);
 
     const opacity = d3.scaleLinear().domain([0, maxAmount]).range([0, 1]);
+
+    const svg = d3.select(ref.current).append("svg").attr("width", width).attr("height", height);
 
     var color = d3
       .scaleOrdinal()
       .domain(["joy", "fear", "anger", "sadness", "confident", "tentative", "analytical", "none"])
-      .range(["#FF3333", "#336699", "#993366", "#339933", "#FF6633", "#FF99CC", "#99CCCC", "#333333"]);
+      .range(["#339933", "#336699", "#993366", "#FF9090", "#FF6633", "#FF99CC", "#99CCCC", "#333333"]);
 
     var sentText = d3
       .scaleOrdinal()
@@ -133,6 +138,7 @@ const WordCloudCanvas = ({ width, height, data }) => {
 
     node
       .append("text")
+      .attr("class", "diagram-text")
       .attr("alignment-baseline", "middle")
       .attr("fill-opacity", 1)
       .attr("fill", "#222222")
@@ -236,7 +242,7 @@ export const WordCloudPanal = () => {
 
   return (
     <div className="GraphPanal">
-      <WordCloudCanvas width={width} height={width / 1.5} data={APIdata} />
+      <WordCloudCanvas width={width} height={width / 1.4} data={APIdata} />
     </div>
   );
 };
