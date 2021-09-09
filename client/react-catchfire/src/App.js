@@ -9,10 +9,14 @@ import { PPGrid } from "./components/PPGrid";
 import { TandMGrid } from "./components/TandMGrid";
 import { DonationGrid } from "./components/DonationGrid";
 import background from "./background.png";
+import ReactGA from 'react-ga4';
 
 const footerHeight = 200;
 const logoHeight = 50;
 const logoWidth = 270;
+
+const TRACKING_ID = "G-9H2Z94DY71";
+ReactGA.initialize(TRACKING_ID);
 
 function App() {
   const innerWidth = window.innerWidth;
