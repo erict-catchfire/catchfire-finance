@@ -11,17 +11,21 @@ import numpy as np
 import pandas as pd
 from scipy.stats.stats import pearsonr
 import math
-
+import pandas_datareader as web
+import datetime as dt
 from cff import config
 from cff.sentiment import predict_sentiment, process_text
 from cff.models import db, Ticker, Document, DocumentSentiment, TickerMention
+from dateutil.relativedelta import relativedelta
+from cff.constants import CryptoList
 
+CRYPTO_LIST = CryptoList().map
 MODEL_FILE = config.MODEL_FILE
 iex = px.Client(api_token=config.IEX_TOKEN, version=config.IEX_ENV)
 main = Blueprint("main", __name__)
 
 # fmt: off
-stop_words = ["","%", ")","(","/", "&amp", "&amp;", "It’s", "#", "-", "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"]
+stop_words = [":","","%", ")","(","/", "&amp", "&amp;", "It’s", "#", "-", "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"]
 # fmt: on
 
 
@@ -102,7 +106,15 @@ def get_price_timeseries():
     ticker = request_object["ticker"]
     length = request_object["length"]
 
-    data = iex.chartDF(ticker, closeOnly=True, timeframe="1y").reset_index()
+    end = dt.datetime.now()
+    start = end - relativedelta(years=1)
+
+    if CRYPTO_LIST[ticker]:
+        data = web.DataReader(ticker + "-USD", "yahoo", start, end)
+        data["date"] = data.index
+        data["close"] = data["Close"]
+    else:
+        data = iex.chartDF(ticker, closeOnly=True, timeframe="1y").reset_index()
 
     data["date"] = data["date"].dt.strftime("%Y-%m-%d")
     data = data.iloc[::-1]
@@ -116,7 +128,15 @@ def get_volume_timeseries():
     ticker = request_object["ticker"]
     length = request_object["length"]
 
-    data = iex.chartDF(ticker, closeOnly=True, timeframe="1y").reset_index()
+    end = dt.datetime.now()
+    start = end - relativedelta(years=1)
+
+    if CRYPTO_LIST[ticker]:
+        data = web.DataReader(ticker + "-USD", "yahoo", start, end)
+        data["date"] = data.index
+        data["volume"] = data["Volume"]
+    else:
+        data = iex.chartDF(ticker, closeOnly=True, timeframe="1y").reset_index()
 
     data["date"] = data["date"].dt.strftime("%Y-%m-%d")
     data = data.iloc[::-1]
