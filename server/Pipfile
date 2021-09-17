@@ -28,6 +28,7 @@ gevent = "*"
 psycogreen = "*"
 psycopg2-binary = "*"
 bs4 = "*"
+pandas-datareader = "*"
 
 [dev-packages]
 ipython = "*"

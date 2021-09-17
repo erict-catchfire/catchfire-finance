@@ -236,7 +236,7 @@ const WordCloudCanvas = ({ width, height, data }) => {
 };
 
 export const WordCloudPanal = () => {
-  const width = 1024 - 30;
+  const width = 1096;
 
   const APIdata = GetWords();
 
