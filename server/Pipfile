@@ -23,6 +23,7 @@ jsbeautifier = "==1.13.13"
 tensorflow = "==2.5.0"
 sklearn = "*"
 tensorflow-text = "==2.5.0"
+pandas-datareader = "*"
 
 [dev-packages]
 ipython = "*"
