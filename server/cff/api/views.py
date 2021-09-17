@@ -415,7 +415,7 @@ def get_table_data():
 
         ticker_dict[ticker.symbol] = [
             ticker.long_name,
-            ticker.classification["sector"],
+            ticker.classification["sector"] if "sector" in ticker.classification else None,
             nan_to(all_corr_p[0], 0),
             nan_to(all_corr_p[1], 1),
             nan_to(all_corr_v[0], 0),
