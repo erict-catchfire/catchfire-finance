@@ -29,6 +29,7 @@ psycogreen = "*"
 psycopg2-binary = "*"
 bs4 = "*"
 pandas-datareader = "*"
+flask-caching = "==1.10.1"
 
 [dev-packages]
 ipython = "*"

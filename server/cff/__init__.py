@@ -28,6 +28,7 @@ app.cli.add_command(twitter_cli)
 health = HealthCheck()
 app.add_url_rule("/healthcheck", "healthcheck", view_func=lambda: health.run())
 
-from .api import main
+from .api import cache, main
 
+cache.init_app(app)
 app.register_blueprint(main)
