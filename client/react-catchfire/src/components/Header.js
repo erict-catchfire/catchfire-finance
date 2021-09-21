@@ -1,6 +1,6 @@
 import React from "react";
 import { Searchbar } from "./Searchbar";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setPage } from "../actions";
 import { Button } from "semantic-ui-react";
 import logo from "../logo.png";
@@ -8,6 +8,7 @@ import ReactGA from "react-ga";
 
 export const Header = ({ logoWidth, logoHeight }) => {
   const dispatch = useDispatch();
+  const page = useSelector((state) => state.page);
 
   const openInNewTab = (url) => {
     const newWindow = window.open(url, "_blank", "noopener,noreferrer");
@@ -34,6 +35,7 @@ export const Header = ({ logoWidth, logoHeight }) => {
       <div className="HeaderLinks">
         <Button
           size="small"
+          active={page === "home"}
           onClick={() => {
             dispatch(setPage("home"));
             ReactGA.event({ category: "User", action: "Clicked Home" });
@@ -43,6 +45,7 @@ export const Header = ({ logoWidth, logoHeight }) => {
         </Button>
         <Button
           size="small"
+          active={page === "viz"}
           onClick={() => {
             dispatch(setPage("viz"));
             ReactGA.event({ category: "User", action: "Clicked Viz" });
@@ -52,6 +55,7 @@ export const Header = ({ logoWidth, logoHeight }) => {
         </Button>
         <Button
           size="small"
+          active={page === "about"}
           onClick={() => {
             dispatch(setPage("about"));
             ReactGA.event({ category: "User", action: "Clicked About" });
@@ -61,6 +65,7 @@ export const Header = ({ logoWidth, logoHeight }) => {
         </Button>
         <Button
           size="small"
+          active={page === "donation"}
           onClick={() => {
             dispatch(setPage("donation"));
             ReactGA.event({ category: "User", action: "Clicked Donation" });
