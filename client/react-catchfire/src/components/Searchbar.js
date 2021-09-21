@@ -8,6 +8,7 @@ import {
   addTextObjectwithKeyword,
   removeTextObjectwithKeyword,
 } from "../actions";
+import { setPage } from "../actions";
 
 const GetTickers = () => {
   const [data, setData] = useState([]);
@@ -39,9 +40,8 @@ export const Searchbar = () => {
   const keywords = useSelector((state) => state.keywords);
 
   const onChangeSearchBar = (e, { value }) => {
-    console.log(value);
-
     if (keywords.length < value.length) {
+      dispatch(setPage("viz"));
       dispatch(setKeywords(value));
       dispatch(addLineObjectwithKeyword(value[value.length - 1]));
       dispatch(addTextObjectwithKeyword(value[value.length - 1]));
