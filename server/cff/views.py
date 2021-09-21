@@ -3,6 +3,7 @@ import re
 from collections import Counter
 from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify
+from flask_caching import Cache
 from sqlalchemy import text, func, desc, distinct
 from sqlalchemy.sql.expression import outerjoin
 import yfinance as yf
@@ -13,7 +14,7 @@ from scipy.stats.stats import pearsonr
 import math
 import pandas_datareader as web
 import datetime as dt
-from cff import cache, config
+from cff import config
 from cff.sentiment import predict_sentiment, process_text
 from cff.models import db, Ticker, Document, DocumentSentiment, TickerMention
 from dateutil.relativedelta import relativedelta
@@ -23,6 +24,7 @@ CRYPTO_LIST = CryptoList().map
 MODEL_FILE = config.MODEL_FILE
 iex = px.Client(api_token=config.IEX_TOKEN, version=config.IEX_ENV)
 main = Blueprint("main", __name__)
+cache = Cache(config={"CACHE_TYPE": "filesystem", "CACHE_DIR": "temp/", "CACHE_DEFAULT_TIMEOUT": 30})
 
 # fmt: off
 stop_words = [":","","%", ")","(","/", "&amp", "&amp;", "It’s", "#", "-", "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"]

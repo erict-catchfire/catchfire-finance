@@ -1,14 +1,14 @@
 from flask import Flask
-from flask_caching import Cache
 from healthcheck import HealthCheck
 
 from cff.models import db
-from cff.views import main
+from cff.views import main, cache
 
 app = Flask(__name__)
 app.register_blueprint(main)
 app.config.from_pyfile("config.py")
-cache = Cache(app)
+
+cache.init_app(app)
 
 IEX_TOKEN = app.config.get("IEX_TOKEN", None)
 if not IEX_TOKEN:
