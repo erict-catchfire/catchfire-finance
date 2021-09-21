@@ -13,7 +13,7 @@ from scipy.stats.stats import pearsonr
 import math
 import pandas_datareader as web
 import datetime as dt
-from cff import config
+from cff import cache, config
 from cff.sentiment import predict_sentiment, process_text
 from cff.models import db, Ticker, Document, DocumentSentiment, TickerMention
 from dateutil.relativedelta import relativedelta
@@ -30,6 +30,7 @@ stop_words = [":","","%", ")","(","/", "&amp", "&amp;", "It’s", "#", "-", "i",
 
 
 @main.route("/getTopDays", methods=["POST"])
+@cache.cached(timeout=60)
 def get_top_days():
     request_object = request.get_json()
     ticker = request_object["ticker"]
@@ -101,6 +102,7 @@ def get_top_days():
 
 
 @main.route("/getPriceTimeSeries", methods=["POST"])
+@cache.cached(timeout=30)
 def get_price_timeseries():
     request_object = request.get_json()
     ticker = request_object["ticker"]
@@ -123,6 +125,7 @@ def get_price_timeseries():
 
 
 @main.route("/getVolumeTimeSeries", methods=["POST"])
+@cache.cached(timeout=30)
 def get_volume_timeseries():
     request_object = request.get_json()
     ticker = request_object["ticker"]
@@ -145,6 +148,7 @@ def get_volume_timeseries():
 
 
 @main.route("/getSentimentTimeSeries", methods=["POST"])
+@cache.cached(timeout=30)
 def get_sentiment_timeseries():
     request_object = request.get_json()
     ticker = request_object["ticker"]
@@ -208,6 +212,7 @@ def get_sentiment_timeseries_helper(ticker, length, sentiment, trunc_amount):
 
 
 @main.route("/getTopSentiment", methods=["POST"])
+@cache.cached(timeout=60)
 def get_top_sentiment():
     request_object = request.get_json()
     sentiment = request_object["sentiment"]
@@ -255,6 +260,7 @@ def get_top_sentiment():
 
 
 @main.route("/getWords", methods=["POST"])
+@cache.cached(timeout=300)
 def get_words():
     request_object = request.get_json()
     days = request_object["days"]
@@ -358,6 +364,7 @@ def nan_to(input, to):
 
 
 @main.route("/getTableData", methods=["POST"])
+@cache.cached(timeout=60)
 def get_table_data():
     ticker_dict = {}
     request_object = request.get_json()
@@ -471,6 +478,7 @@ def get_table_data():
 
 
 @main.route("/getTickers", methods=["GET"])
+@cache.cached(timeout=600)
 def get_tickers():
     tickers = (
         db.session.query(Ticker.symbol, Ticker.long_name)
