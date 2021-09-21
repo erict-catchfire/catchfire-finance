@@ -15,7 +15,8 @@ from scipy.stats.stats import pearsonr
 from sqlalchemy import text, func, desc, distinct
 from sqlalchemy.sql.expression import outerjoin
 
-from cff import config, db, main
+from . import main
+from cff import config, db
 from cff.sentiment import predict_sentiment, process_text
 from cff.models import Ticker, Document, DocumentSentiment, TickerMention
 from cff.constants import CryptoList
