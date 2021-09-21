@@ -85,7 +85,6 @@ const LineChart = ({ width, height, data }) => {
       });
 
       drawChart(limits.valid, limits.start, limits.end);
-
     } else {
       chart.selectAll(".line").each(function () {
         this.remove();
@@ -232,65 +231,45 @@ const LineChart = ({ width, height, data }) => {
     const brushed = (event, d) => {
       const extent = event.selection;
 
-      if(extent != undefined) {
-        dispatch(setStartEndLineGraph(xScale2.invert(extent[0]), xScale2.invert(extent[1])));
+      let min = 0;
+      let max = 0;
 
-        xScale.domain([xScale2.invert(extent[0]), xScale2.invert(extent[1])]);
-        chart
-          .selectAll(".x.axis")
-          .transition()
-          .duration(duration / 10)
-          .call(d3.axisBottom(xScale));
+      if (extent != undefined) {
+        min = xScale2.invert(extent[0]);
+        max = xScale2.invert(extent[1]);
+      } else {
+        min = xScale2.min;
+        max = xScale2.max;
+      }
 
-        chart
-          .selectAll(".line")
-          .transition()
-          .attr("clip-path", "url(#clip)")
-          .duration(duration / 10)
-          .attr(
-            "d",
-            d3
-              .line()
-              .x((d) => xScale(d.time))
-              .y((d) => {
-                if (d.type === "axis") return yScale(d.data);
-                else if (d.type === "price") {
-                  return yScalePrice(d.data);
-                } else {
-                  return yScaleVolume(d.data);
-                }
-              })
-          );
-        } else {
-          dispatch(setStartEndLineGraph(xScale2.min(), xScale2.max()));
+      dispatch(setStartEndLineGraph(min, max));
 
-          xScale.domain([xScale2.min(), xScale2.max()]);
-          chart
-            .selectAll(".x.axis")
-            .transition()
-            .duration(duration / 10)
-            .call(d3.axisBottom(xScale));
-  
-          chart
-            .selectAll(".line")
-            .transition()
-            .attr("clip-path", "url(#clip)")
-            .duration(duration / 10)
-            .attr(
-              "d",
-              d3
-                .line()
-                .x((d) => xScale(d.time))
-                .y((d) => {
-                  if (d.type === "axis") return yScale(d.data);
-                  else if (d.type === "price") {
-                    return yScalePrice(d.data);
-                  } else {
-                    return yScaleVolume(d.data);
-                  }
-                })
-            );
-        }
+      xScale.domain([min, max]);
+      chart
+        .selectAll(".x.axis")
+        .transition()
+        .duration(duration / 10)
+        .call(d3.axisBottom(xScale));
+
+      chart
+        .selectAll(".line")
+        .transition()
+        .attr("clip-path", "url(#clip)")
+        .duration(duration / 10)
+        .attr(
+          "d",
+          d3
+            .line()
+            .x((d) => xScale(d.time))
+            .y((d) => {
+              if (d.type === "axis") return yScale(d.data);
+              else if (d.type === "price") {
+                return yScalePrice(d.data);
+              } else {
+                return yScaleVolume(d.data);
+              }
+            })
+        );
     };
 
     const brush = d3
