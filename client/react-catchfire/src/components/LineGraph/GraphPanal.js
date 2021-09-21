@@ -83,7 +83,9 @@ const LineChart = ({ width, height, data }) => {
       svg.selectAll(".tool").each(function () {
         this.remove();
       });
+
       drawChart(limits.valid, limits.start, limits.end);
+
     } else {
       chart.selectAll(".line").each(function () {
         this.remove();
@@ -230,34 +232,65 @@ const LineChart = ({ width, height, data }) => {
     const brushed = (event, d) => {
       const extent = event.selection;
 
-      dispatch(setStartEndLineGraph(xScale2.invert(extent[0]), xScale2.invert(extent[1])));
+      if(extent != undefined) {
+        dispatch(setStartEndLineGraph(xScale2.invert(extent[0]), xScale2.invert(extent[1])));
 
-      xScale.domain([xScale2.invert(extent[0]), xScale2.invert(extent[1])]);
-      chart
-        .selectAll(".x.axis")
-        .transition()
-        .duration(duration / 10)
-        .call(d3.axisBottom(xScale));
+        xScale.domain([xScale2.invert(extent[0]), xScale2.invert(extent[1])]);
+        chart
+          .selectAll(".x.axis")
+          .transition()
+          .duration(duration / 10)
+          .call(d3.axisBottom(xScale));
 
-      chart
-        .selectAll(".line")
-        .transition()
-        .attr("clip-path", "url(#clip)")
-        .duration(duration / 10)
-        .attr(
-          "d",
-          d3
-            .line()
-            .x((d) => xScale(d.time))
-            .y((d) => {
-              if (d.type === "axis") return yScale(d.data);
-              else if (d.type === "price") {
-                return yScalePrice(d.data);
-              } else {
-                return yScaleVolume(d.data);
-              }
-            })
-        );
+        chart
+          .selectAll(".line")
+          .transition()
+          .attr("clip-path", "url(#clip)")
+          .duration(duration / 10)
+          .attr(
+            "d",
+            d3
+              .line()
+              .x((d) => xScale(d.time))
+              .y((d) => {
+                if (d.type === "axis") return yScale(d.data);
+                else if (d.type === "price") {
+                  return yScalePrice(d.data);
+                } else {
+                  return yScaleVolume(d.data);
+                }
+              })
+          );
+        } else {
+          dispatch(setStartEndLineGraph(xScale2.min(), xScale2.max()));
+
+          xScale.domain([xScale2.min(), xScale2.max()]);
+          chart
+            .selectAll(".x.axis")
+            .transition()
+            .duration(duration / 10)
+            .call(d3.axisBottom(xScale));
+  
+          chart
+            .selectAll(".line")
+            .transition()
+            .attr("clip-path", "url(#clip)")
+            .duration(duration / 10)
+            .attr(
+              "d",
+              d3
+                .line()
+                .x((d) => xScale(d.time))
+                .y((d) => {
+                  if (d.type === "axis") return yScale(d.data);
+                  else if (d.type === "price") {
+                    return yScalePrice(d.data);
+                  } else {
+                    return yScaleVolume(d.data);
+                  }
+                })
+            );
+        }
     };
 
     const brush = d3
@@ -303,7 +336,7 @@ const LineChart = ({ width, height, data }) => {
             })
         )
         .attr("stroke", (d) => (controlItems[d.id] == null ? "white" : colorNametoHex[controlItems[d.id].color]))
-        .attr("stroke-width", 2)
+        .attr("stroke-width", (d) => (controlItems[d.id] == null ? 0 : 2))
         .attr("stroke-dasharray", (d) =>
           controlItems[d.id] == null ? "none" : patternToArray[controlItems[d.id].pattern]
         )
@@ -384,12 +417,14 @@ const LineChart = ({ width, height, data }) => {
           }
         });
 
-        markers.push({
-          keyword: controlItems[d].keyword,
-          name: controlItems[d].dataName,
-          time: obj.time,
-          data: obj.data,
-        });
+        if (controlItems[d] != undefined) {
+          markers.push({
+            keyword: controlItems[d].keyword,
+            name: controlItems[d].dataName,
+            time: obj.time,
+            data: obj.data,
+          });
+        }
       });
 
       if (yScale.invert(y - margin.top) >= 0 && x - margin.left >= 0) {
