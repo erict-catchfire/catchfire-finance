@@ -151,7 +151,6 @@ def get_volume_timeseries():
 
 
 @main.route("/getSentimentTimeSeries", methods=["POST"])
-@cache.cached(timeout=30)
 def get_sentiment_timeseries():
     request_object = request.get_json()
     ticker = request_object["ticker"]
@@ -163,6 +162,7 @@ def get_sentiment_timeseries():
     return jsonify(to_return)
 
 
+@cache.memoize(timeout=30)
 def get_sentiment_timeseries_helper(ticker, length, sentiment, trunc_amount):
     to_return = []
 
@@ -215,7 +215,6 @@ def get_sentiment_timeseries_helper(ticker, length, sentiment, trunc_amount):
 
 
 @main.route("/getTopSentiment", methods=["POST"])
-@cache.cached(timeout=60)
 def get_top_sentiment():
     request_object = request.get_json()
     sentiment = request_object["sentiment"]
@@ -223,6 +222,13 @@ def get_top_sentiment():
     short = request_object["short"]
     to_return = []
 
+    top_sentiment = get_top_sentiment_helper(long, sentiment, short, to_return)
+
+    return jsonify(top_sentiment)
+
+
+@cache.memoize(timeout=60)
+def get_top_sentiment_helper(long, sentiment, short, to_return):
     counts_query = (
         db.session.query(Ticker.symbol, func.count(Ticker.symbol))
         .join(TickerMention, TickerMention.ticker_id == Ticker.id)
@@ -232,10 +238,8 @@ def get_top_sentiment():
         .group_by(Ticker.symbol)
         .order_by(desc(func.count(Ticker.symbol)))
     )
-
     long_counts_query = counts_query.filter(Document.posted_at > datetime.now() - timedelta(days=long))
     short_counts_query = counts_query.filter(Document.posted_at > datetime.now() - timedelta(days=short))
-
     if sentiment != "all":
         long_counts_query = long_counts_query.filter(
             DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment
@@ -243,13 +247,10 @@ def get_top_sentiment():
         short_counts_query = short_counts_query.filter(
             DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment
         )
-
     short_counts_query = short_counts_query.limit(10)
-
     document_long_counts = long_counts_query.all()
     document_short_counts = short_counts_query.all()
     ticker_dict_long = {ticker: count for (ticker, count) in document_long_counts}
-
     for tick, count in document_short_counts:
         to_return.append(
             {
@@ -258,8 +259,7 @@ def get_top_sentiment():
                 "short_count": count,
             }
         )
-
-    return jsonify(to_return)
+    return to_return
 
 
 @main.route("/getWords", methods=["POST"])
