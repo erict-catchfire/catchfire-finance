@@ -367,17 +367,19 @@ def nan_to(input, to):
 
 
 @main.route("/getTableData", methods=["POST"])
-@cache.cached(timeout=60)
 def get_table_data():
     ticker_dict = {}
     request_object = request.get_json()
     requested_tickers = request_object["tickers"]
 
+    return get_table_data_helper(requested_tickers, ticker_dict)
+
+
+@cache.memoize(timeout=180)
+def get_table_data_helper(requested_tickers, ticker_dict):
     if not requested_tickers:
         return "Include valid tickers for request", 400
-
-    tickers = Ticker.query.filter(Ticker.symbol.in_(request_object["tickers"]))
-
+    tickers = Ticker.query.filter(Ticker.symbol.in_(requested_tickers))
     all_fill = np.zeros(30)
     joy_fill = np.zeros(30)
     fear_fill = np.zeros(30)
@@ -386,7 +388,6 @@ def get_table_data():
     confident_fill = np.zeros(30)
     tentative_fill = np.zeros(30)
     analytical_fill = np.zeros(30)
-
     # This is totally arbitrary for now.
     for ticker in tickers:
         all = get_sentiment_timeseries_helper(ticker.symbol, 29, "all", "day")
@@ -476,7 +477,6 @@ def get_table_data():
             nan_to(analytical_corr_v[0], 0),
             nan_to(analytical_corr_v[1], 1),
         ]
-
     return jsonify(ticker_dict)
 
 
