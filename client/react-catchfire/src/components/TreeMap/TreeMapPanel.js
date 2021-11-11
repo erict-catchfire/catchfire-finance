@@ -80,7 +80,7 @@ const TreeMapCanvas = ({ width, height, data }) => {
       .domain(["Joy", "Fear", "Anger", "Sadness", "Confident", "Tentative", "Analytical", "None"])
       .range(["#339933", "#336699", "#993366", "#FF9090", "#FF6633", "#FF99CC", "#99CCCC", "#333333"]);
 
-    var opacity = d3.scaleLinear().domain([0, 2]).range([0.5, 1]);
+    var opacity = d3.scaleLinear().domain([0, 1]).range([0.3, 1]);
 
     // create a tooltip
     var Tooltip = d3
