@@ -30,6 +30,7 @@ psycopg2-binary = "*"
 bs4 = "*"
 pandas-datareader = "*"
 flask-caching = "==1.10.1"
+sshtunnel = "==0.4.0"
 
 [dev-packages]
 ipython = "*"
