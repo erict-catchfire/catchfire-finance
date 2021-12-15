@@ -3,6 +3,7 @@ from datetime import datetime
 
 DEFAULT_SITE_MAP = [{"name": "Twitter", "url_domain": "twitter.com"}]
 DEFAULT_SUPPORTED_TICKERS = ["AMZN", "DARE", "GOOG", "GME", "OSK", "MSFT"]
+SENTIMENTS = ["analytical", "anger", "confident", "fear", "joy", "sadness", "tentative"]
 
 
 class CryptoList(object):

@@ -18,7 +18,7 @@ from sqlalchemy import text, func, desc, distinct
 from sqlalchemy.sql.expression import outerjoin
 
 from . import cache, main
-from cff import config, db
+from cff import config, constants as c, db
 from cff.sentiment import predict_sentiment, process_text
 from cff.models import Ticker, Document, DocumentSentiment, TickerMention
 from cff.constants import CryptoList
@@ -28,7 +28,7 @@ MODEL_FILE = config.MODEL_FILE
 iex = px.Client(api_token=config.IEX_TOKEN, version=config.IEX_ENV)
 
 # fmt: off
-stop_words = [":","","%", ")","(","/", "&amp", "&amp;", "It’s", "#", "-", "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"]
+stop_words = ["$","|","+",":","","%",")","(","/","&amp","&amp;","It’s","#","-","i","me","my","myself","we","our","ours","ourselves","you","your","yours","yourself","yourselves","he","him","his","himself","she","her","hers","herself","it","its","itself","they","them","their","theirs","themselves","what","which","who","whom","this","that","these","those","am","is","are","was","were","be","been","being","have","has","had","having","do","does","did","doing","a","an","the","and","but","if","or","because","as","until","while","of","at","by","for","with","about","against","between","into","through","during","before","after","above","below","to","from","up","down","in","out","on","off","over","under","again","further","then","once","here","there","when","where","why","how","all","any","both","each","few","more","most","other","some","such","no","nor","not","only","own","same","so","than","too","very","s","t","can","will","just","don","should","now"]
 # fmt: on
 
 
@@ -220,46 +220,75 @@ def get_top_sentiment():
     sentiment = request_object["sentiment"]
     long = request_object["long"]
     short = request_object["short"]
-    to_return = []
 
-    top_sentiment = get_top_sentiment_helper(long, sentiment, short, to_return)
+    top_sentiment = get_top_sentiment_helper(long, sentiment, short)
 
     return jsonify(top_sentiment)
 
 
 @cache.memoize(timeout=60)
-def get_top_sentiment_helper(long, sentiment, short, to_return):
-    counts_query = (
-        db.session.query(Ticker.symbol, func.count(Ticker.symbol))
-        .join(TickerMention, TickerMention.ticker_id == Ticker.id)
-        .join(Document, Document.id == TickerMention.document_id)
-        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
+def get_top_sentiment_helper(long, sentiment, short):
+    counts_subquery = (
+        db.session.query(
+            Ticker.symbol.label("symbol"),
+            func.count(Ticker.symbol).label("symbol_count"),
+            DocumentSentiment.sentiment["strongest_emotion"].astext.label("emotion"),
+            func.row_number()
+            .over(
+                partition_by=DocumentSentiment.sentiment["strongest_emotion"].astext,
+                order_by=desc(func.count(Ticker.symbol)),
+            )
+            .label("row_number"),
+        )
+        .join(TickerMention)
+        .join(Document)
+        .join(DocumentSentiment)
         .filter(DocumentSentiment.model_version == MODEL_FILE)
-        .group_by(Ticker.symbol)
+        .filter(DocumentSentiment.sentiment["strongest_emotion"].astext.is_not(None))
+        .group_by(Ticker.symbol, DocumentSentiment.sentiment["strongest_emotion"].astext)
         .order_by(desc(func.count(Ticker.symbol)))
     )
-    long_counts_query = counts_query.filter(Document.posted_at > datetime.now() - timedelta(days=long))
-    short_counts_query = counts_query.filter(Document.posted_at > datetime.now() - timedelta(days=short))
+    lcsq = counts_subquery.filter(Document.posted_at > datetime.now() - timedelta(days=long))
+    scsq = counts_subquery.filter(Document.posted_at > datetime.now() - timedelta(days=short))
     if sentiment != "all":
-        long_counts_query = long_counts_query.filter(
-            DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment
-        )
-        short_counts_query = short_counts_query.filter(
-            DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment
-        )
-    short_counts_query = short_counts_query.limit(10)
-    document_long_counts = long_counts_query.all()
+        lcsq = lcsq.filter(DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment)
+        scsq = scsq.filter(DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment)
+    lcsq = lcsq.subquery()
+    scsq = scsq.subquery()
+
+    short_counts_query = (
+        db.session.query(scsq.c.emotion, scsq.c.symbol_count, scsq.c.symbol)
+        .filter(scsq.c.row_number <= 10)
+        .order_by(scsq.c.emotion.desc(), scsq.c.symbol_count.desc())
+    )
+
+    long_counts_query = db.session.query(lcsq.c.emotion, lcsq.c.symbol_count, lcsq.c.symbol).order_by(
+        desc(lcsq.c.symbol_count)
+    )
+
     document_short_counts = short_counts_query.all()
-    ticker_dict_long = {ticker: count for (ticker, count) in document_long_counts}
-    for tick, count in document_short_counts:
-        to_return.append(
+    document_long_counts = long_counts_query.all()
+
+    ticker_dict_long = _top_ticker_to_dict(document_long_counts)
+
+    res_dict = {emotion: [] for (emotion) in c.SENTIMENTS} if sentiment == "all" else {sentiment: []}
+    for emotion, count, tick in document_short_counts:
+        res_dict[emotion].append(
             {
                 "ticker": tick,
-                "long_count": ticker_dict_long[tick],
+                "long_count": ticker_dict_long[emotion][tick],
                 "short_count": count,
             }
         )
-    return to_return
+    return res_dict
+
+
+def _top_ticker_to_dict(query_result):
+    res_dict = {emotion: {} for (emotion) in c.SENTIMENTS}
+    for emotion, count, ticker in query_result:
+        if ticker:
+            res_dict[emotion][ticker] = count
+    return res_dict
 
 
 @main.route("/getWords", methods=["POST"])
@@ -481,7 +510,7 @@ def get_table_data_helper(requested_tickers, ticker_dict):
 
 
 @main.route("/getTickers", methods=["GET"])
-@cache.cached(timeout=600)
+@cache.cached(timeout=86400)
 def get_tickers():
     tickers = (
         db.session.query(Ticker.symbol, Ticker.long_name)

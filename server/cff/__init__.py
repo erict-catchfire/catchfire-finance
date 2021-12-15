@@ -1,7 +1,9 @@
 import logging
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from healthcheck import HealthCheck
+from sshtunnel import SSHTunnelForwarder
 
 app = Flask(__name__)
 app.config.from_pyfile("config.py")
@@ -14,6 +16,24 @@ if not IEX_TOKEN:
 SQLALCHEMY_DATABASE_URI = app.config.get("SQLALCHEMY_DATABASE_URI", None)
 if not SQLALCHEMY_DATABASE_URI:
     raise ValueError("No database uri provided for catchfire-finance.")
+
+_SSH_USER = app.config.get("SSH_USER", None)
+_SSH_PASSWORD = app.config.get("SSH_PASSWORD", None)
+_DB_READER = app.config.get("DB_READER", None)
+_DB_READER_PASSWORD = app.config.get("DB_READER_PASSWORD", None)
+should_ssh = _SSH_USER and _SSH_PASSWORD
+can_attempt_read = _DB_READER and _DB_READER_PASSWORD and app.config.get("USE_PROD_DB", False)
+if should_ssh and can_attempt_read:
+    server = SSHTunnelForwarder(
+        ("catchfire.finance", 22),
+        ssh_username=_SSH_USER,
+        ssh_password=_SSH_PASSWORD,
+        remote_bind_address=("127.0.0.1", 5432),
+    )
+    server.start()
+    app.config.update(
+        SQLALCHEMY_DATABASE_URI=f"postgresql://{_DB_READER}:{_DB_READER_PASSWORD}@localhost:{server.local_bind_port}/catchfire"
+    )
 
 db = SQLAlchemy(app)
 

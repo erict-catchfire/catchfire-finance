@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 
 const GetTopTickers = (sentiment) => {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState({});
   const call = "/api/getTopSentiment";
   useEffect(() => {
     fetch(call, {
@@ -17,28 +17,30 @@ const GetTopTickers = (sentiment) => {
       }),
     }).then((response) => {
       response.json().then((data) => {
-        const toSet = [];
-        for (const ticker of data) {
-          toSet.push({
-            name: ticker.ticker,
-            group: ticker.ticker,
-            value: ticker.short_count,
-            op: ticker.short_count / ticker.long_count,
-            colname: "level3",
-          });
+        const toDict = {};
+        for (const top_sentiment in data) {
+          const toSet = [];
+          for (const top_ticker_data of data[top_sentiment]) {
+            toSet.push({
+              name: top_ticker_data.ticker,
+              group: top_ticker_data.ticker,
+              value: top_ticker_data.short_count,
+              op: top_ticker_data.short_count / top_ticker_data.long_count,
+              colname: "level3",
+            });
+          }
+          toDict[top_sentiment] = toSet;
         }
-        setData(toSet);
+        setData(toDict);
       });
     });
   }, []);
-
   return data;
 };
 
 const TreeMapCanvas = ({ width, height, data }) => {
   const margin = { top: 0, right: 0, bottom: -55, left: 3 };
   const innerHeight = height - margin.top - margin.bottom;
-  //const innerWidth = width - margin.left - margin.right;
   let svg;
   const ref = useRef();
 
@@ -50,40 +52,30 @@ const TreeMapCanvas = ({ width, height, data }) => {
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-    if (
-      data.children[0].children.length !== 0 &&
-      data.children[1].children.length !== 0 &&
-      data.children[2].children.length !== 0 &&
-      data.children[3].children.length !== 0 &&
-      data.children[4].children.length !== 0 &&
-      data.children[5].children.length !== 0 &&
-      data.children[6].children.length !== 0
-    ) {
+    const loadChart = data.children.every((child) => child.children != undefined && child.children.length !== 0);
+    if (loadChart) {
       drawChart();
     }
   }, [data]);
 
   const drawChart = () => {
-    var root = d3.hierarchy(data).sum(function (d) {
+    const root = d3.hierarchy(data).sum(function (d) {
       return d.value;
     });
 
     d3.treemap().size([width, height]).paddingTop(28).paddingRight(6).paddingInner(3)(
-      // Padding between each rectangle
-      //.paddingOuter(6)
-      //.padding(20)
       root
     );
 
-    var color = d3
+    const color = d3
       .scaleOrdinal()
       .domain(["Joy", "Fear", "Anger", "Sadness", "Confident", "Tentative", "Analytical", "None"])
       .range(["#339933", "#336699", "#993366", "#FF9090", "#FF6633", "#FF99CC", "#99CCCC", "#333333"]);
 
-    var opacity = d3.scaleLinear().domain([0, 1]).range([0.3, 1]);
+    const opacity = d3.scaleLinear().domain([0, 1]).range([0.3, 1]);
 
     // create a tooltip
-    var Tooltip = d3
+    const Tooltip = d3
       .select("#treechart")
       .append("div")
       .style("opacity", 0)
@@ -96,11 +88,11 @@ const TreeMapCanvas = ({ width, height, data }) => {
       .style("position", "absolute");
 
     // Three function that change the tooltip when user hover / move / leave a cell
-    var mouseover = function (d) {
+    const mouseover = function (d) {
       Tooltip.style("opacity", 1);
     };
 
-    var mousemove = function (event, d) {
+    const mousemove = function (event, d) {
       Tooltip.html(
         d.data.name + "<br>" + d.value + " mentions" + "<br>" + Math.round(d.data.op * 100) / 100 + " S/L Ratio"
       )
@@ -108,7 +100,7 @@ const TreeMapCanvas = ({ width, height, data }) => {
         .style("top", d3.pointer(event)[1] + "px");
     };
 
-    var mouseleave = function (d) {
+    const mouseleave = function (d) {
       Tooltip.style("opacity", 0);
     };
 
@@ -213,14 +205,22 @@ const TreeMapCanvas = ({ width, height, data }) => {
 
 export const TreeMapPanel = () => {
   const width = 1024 - 30;
+  const all = GetTopTickers("all");
+  const joy = all['joy'];
+  const fear = all['fear'];
+  const anger = all['anger'];
+  const sadness = all['sadness'];
+  const confident = all['confident'];
+  const tentative = all['tentative'];
+  const analytical = all['analytical'];
 
-  const joy = GetTopTickers("joy");
-  const fear = GetTopTickers("fear");
-  const anger = GetTopTickers("anger");
-  const sadness = GetTopTickers("sadness");
-  const confident = GetTopTickers("confident");
-  const tentative = GetTopTickers("tentative");
-  const analytical = GetTopTickers("analytical");
+  // const joy = GetTopTickers("joy")["joy"];
+  // const fear = GetTopTickers("fear")["fear"];
+  // const anger = GetTopTickers("anger")["anger"];
+  // const sadness = GetTopTickers("sadness")["sadness"];
+  // const confident = GetTopTickers("confident")["confident"];
+  // const tentative = GetTopTickers("tentative")["tentative"];
+  // const analytical = GetTopTickers("analytical")["analytical"];
 
   const data2 = {
     children: [
@@ -260,44 +260,6 @@ export const TreeMapPanel = () => {
         colname: "level2",
       },
     ],
-  };
-
-  const data = {
-    children: [
-      {
-        name: "Crypto",
-        children: [
-          { name: "BIT", group: "BIT", value: 28, colname: "level3" },
-          { name: "ETH", group: "ETH", value: 19, colname: "level3" },
-          { name: "DOGE", group: "DOGE", value: 18, colname: "level3" },
-          { name: "XRP", group: "XRP", value: 19, colname: "level3" },
-        ],
-        colname: "level2",
-      },
-      {
-        name: "Angry Sentiment",
-        children: [
-          { name: "MSFT", group: "MSFT", value: 14, colname: "level3" },
-          { name: "ARM", group: "ARM", value: 11, colname: "level3" },
-          { name: "INTL", group: "INTL", value: 15, colname: "level3" },
-          { name: "AMZN", group: "AMZN", value: 16, colname: "level3" },
-        ],
-        colname: "level2",
-      },
-      {
-        name: "Positive Sentiment",
-        children: [
-          { name: "DARE", group: "DARE", value: 10, colname: "level3" },
-          { name: "ARKS", group: "ARKS", value: 13, colname: "level3" },
-          { name: "ERIC", group: "ERIC", value: 13, colname: "level3" },
-          { name: "OKS", group: "OKS", value: 25, colname: "level3" },
-          { name: "ERR", group: "ERR", value: 16, colname: "level3" },
-          { name: "WAT", group: "WAT", value: 28, colname: "level3" },
-        ],
-        colname: "level2",
-      },
-    ],
-    name: "Keywords",
   };
 
   return (
