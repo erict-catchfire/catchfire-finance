@@ -3,7 +3,7 @@ import os
 import random
 
 import click
-from flask.cli import AppGroup
+from flask.cli import AppGroup, with_appcontext
 
 from cff import db
 from cff.models import Document, DocumentSentiment, Ticker
@@ -91,6 +91,7 @@ def _seed_sentiment_emotions(doc_id: int):
 @twitter_cli.command("add_ticker")
 @click.argument("tickers", required=True, nargs=-1)
 @click.option("--crypto", "crypto", required=False, default=False, help="True/False, Tickers are crypto")
+@with_appcontext
 def add_ticker(tickers, crypto):
     if not tickers:
         click.secho(f"Tickers must be specified to add. Exiting", fg="red")
@@ -111,3 +112,10 @@ def add_ticker(tickers, crypto):
         for ticker in tickers:
             twitter.bg_query_realtime_by_symbol.delay(ticker)
         click.secho(f"Gathering realtime data for: {tickers}", fg="green")
+
+
+@twitter_cli.command("test_job")
+@click.option("--test", "test", required=False, default="")
+@with_appcontext
+def test(test: str):
+    twitter.test_sentiment_job.delay(test)

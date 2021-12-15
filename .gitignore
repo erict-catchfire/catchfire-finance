@@ -19,6 +19,7 @@ npm-debug.log
 yarn-error.log
 
 server/temp
+server/temp/api_cache
 server/cff/modeling/*
-!server/cff/modeling/__init__.py
-
+!server/cff/modeling/__init__.pys
+gunicorn*.log

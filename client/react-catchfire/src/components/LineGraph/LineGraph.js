@@ -9,7 +9,7 @@ import { Dimmer } from "semantic-ui-react";
 const GetSentimentData = (keyword, sentiment, element, dispatch) => {
   let to_return = [];
 
-  fetch("/getSentimentTimeSeries", {
+  fetch("/api/getSentimentTimeSeries", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -39,7 +39,7 @@ const GetSentimentData = (keyword, sentiment, element, dispatch) => {
 const GetPriceData = (keyword, element, dispatch) => {
   let to_return = [];
 
-  fetch("/getPriceTimeSeries", {
+  fetch("/api/getPriceTimeSeries", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -68,7 +68,7 @@ const GetPriceData = (keyword, element, dispatch) => {
 const GetVolumeData = (keyword, element, dispatch) => {
   let to_return = [];
 
-  fetch("/getVolumeTimeSeries", {
+  fetch("/api/getVolumeTimeSeries", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -10,8 +10,8 @@ from rq import Queue
 from rq.decorators import job
 from sqlalchemy import asc
 
-from cff import sentiment
-from cff.models import db, Document, Site, DocumentSentiment
+from cff import app, config, db, sentiment
+from cff.models import Document, Site, DocumentSentiment
 from cff.historical_worker import conn as hist_conn
 from cff.realtime_worker import conn as real_conn
 from cff.sentiment_worker import conn as sent_conn
@@ -21,14 +21,37 @@ MINIMUM_FAVES = 2
 STRONGEST_THRESHOLD = 0.4
 
 
+@job("sentiment", connection=hist_conn, timeout=-1)
+def test_sentiment_job(test_str: str):
+    array_of_doc_text = [test_str]
+
+    processed_text: np.array = sentiment.process_text(array_of_doc_text)
+    doc_sentiments: np.array = sentiment.predict_sentiment(processed_text)
+
+    for doc_sentiment in doc_sentiments:
+        sentiments = {
+            "anger": doc_sentiment[0],
+            "fear": doc_sentiment[1],
+            "joy": doc_sentiment[2],
+            "sadness": doc_sentiment[3],
+            "analytical": doc_sentiment[4],
+            "confident": doc_sentiment[5],
+            "tentative": doc_sentiment[6],
+        }
+        print(f"Phrase: {test_str}")
+        print(f"Has sentiments of: {sentiments}")
+
+
 @job("historical", connection=hist_conn, timeout=-1)
 def bg_query_historical_by_symbol(symbol: str, fresh: bool = False):
-    _bg_query_tweets_for_symbol(symbol, sqlalchemy.asc, fresh)
+    with app.app_context():
+        _bg_query_tweets_for_symbol(symbol, sqlalchemy.asc, fresh)
 
 
 @job("realtime", connection=real_conn, timeout=-1)
 def bg_query_realtime_by_symbol(symbol: str):
-    _bg_query_tweets_for_symbol(symbol, sqlalchemy.desc)
+    with app.app_context():
+        _bg_query_tweets_for_symbol(symbol, sqlalchemy.desc)
 
 
 def _bg_query_tweets_for_symbol(
@@ -121,7 +144,8 @@ def _get_tweet_by_ticker(lookup_symbol: Optional[str] = None, asc_or_desc=None):
 
 @job("sentiment", connection=sent_conn, timeout=-1)
 def bg_generate_sentiments(doc_ids: List[int]):
-    _generate_sentiments_for_doc_ids(doc_ids)
+    with app.app_context():
+        _generate_sentiments_for_doc_ids(doc_ids)
 
 
 def _generate_sentiments_for_doc_ids(doc_ids: List[int]):
@@ -158,6 +182,6 @@ def _generate_sentiments_for_doc_ids(doc_ids: List[int]):
         strongest_emotion = strongest_value if sentiments[strongest_value] > STRONGEST_THRESHOLD else None
         sentiment_map = {"strongest_emotion": strongest_emotion, "emotions": sentiments}
 
-        DocumentSentiment(document_id=doc_id, model_version=sentiment.MODEL_FILE, sentiment=sentiment_map).save()
+        DocumentSentiment(document_id=doc_id, model_version=config.MODEL_FILE, sentiment=sentiment_map).save()
 
     db.session.commit()

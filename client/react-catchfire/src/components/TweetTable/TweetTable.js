@@ -15,7 +15,7 @@ const lengthDict = {
 const GetTableData = (keyword, length, sentiment, amount, dispatch, element) => {
   let to_return = [];
 
-  fetch("/getTopDays", {
+  fetch("/api/getTopDays", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

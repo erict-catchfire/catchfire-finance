@@ -1,35 +1,39 @@
 import operator
 import re
-from collections import Counter
-from datetime import datetime, timedelta
-from flask import Blueprint, request, jsonify
-from sqlalchemy import text, func, desc, distinct
-from sqlalchemy.sql.expression import outerjoin
 import yfinance as yf
 import pyEX as px
 import numpy as np
 import pandas as pd
-from scipy.stats.stats import pearsonr
 import math
 import pandas_datareader as web
 import datetime as dt
-from cff import config
-from cff.sentiment import predict_sentiment, process_text
-from cff.models import db, Ticker, Document, DocumentSentiment, TickerMention
+
+from collections import Counter
+from datetime import datetime, timedelta
+
 from dateutil.relativedelta import relativedelta
+from flask import request, jsonify
+from scipy.stats.stats import pearsonr
+from sqlalchemy import text, func, desc, distinct
+from sqlalchemy.sql.expression import outerjoin
+
+from . import cache, main
+from cff import config, constants as c, db
+from cff.sentiment import predict_sentiment, process_text
+from cff.models import Ticker, Document, DocumentSentiment, TickerMention
 from cff.constants import CryptoList
 
 CRYPTO_LIST = CryptoList().map
 MODEL_FILE = config.MODEL_FILE
 iex = px.Client(api_token=config.IEX_TOKEN, version=config.IEX_ENV)
-main = Blueprint("main", __name__)
 
 # fmt: off
-stop_words = [":","","%", ")","(","/", "&amp", "&amp;", "It’s", "#", "-", "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"]
+stop_words = ["$","|","+",":","","%",")","(","/","&amp","&amp;","It’s","#","-","i","me","my","myself","we","our","ours","ourselves","you","your","yours","yourself","yourselves","he","him","his","himself","she","her","hers","herself","it","its","itself","they","them","their","theirs","themselves","what","which","who","whom","this","that","these","those","am","is","are","was","were","be","been","being","have","has","had","having","do","does","did","doing","a","an","the","and","but","if","or","because","as","until","while","of","at","by","for","with","about","against","between","into","through","during","before","after","above","below","to","from","up","down","in","out","on","off","over","under","again","further","then","once","here","there","when","where","why","how","all","any","both","each","few","more","most","other","some","such","no","nor","not","only","own","same","so","than","too","very","s","t","can","will","just","don","should","now"]
 # fmt: on
 
 
 @main.route("/getTopDays", methods=["POST"])
+@cache.cached(timeout=60)
 def get_top_days():
     request_object = request.get_json()
     ticker = request_object["ticker"]
@@ -101,6 +105,7 @@ def get_top_days():
 
 
 @main.route("/getPriceTimeSeries", methods=["POST"])
+@cache.cached(timeout=30)
 def get_price_timeseries():
     request_object = request.get_json()
     ticker = request_object["ticker"]
@@ -123,6 +128,7 @@ def get_price_timeseries():
 
 
 @main.route("/getVolumeTimeSeries", methods=["POST"])
+@cache.cached(timeout=30)
 def get_volume_timeseries():
     request_object = request.get_json()
     ticker = request_object["ticker"]
@@ -156,6 +162,7 @@ def get_sentiment_timeseries():
     return jsonify(to_return)
 
 
+@cache.memoize(timeout=30)
 def get_sentiment_timeseries_helper(ticker, length, sentiment, trunc_amount):
     to_return = []
 
@@ -213,48 +220,79 @@ def get_top_sentiment():
     sentiment = request_object["sentiment"]
     long = request_object["long"]
     short = request_object["short"]
-    to_return = []
 
-    counts_query = (
-        db.session.query(Ticker.symbol, func.count(Ticker.symbol))
-        .join(TickerMention, TickerMention.ticker_id == Ticker.id)
-        .join(Document, Document.id == TickerMention.document_id)
-        .join(DocumentSentiment, Document.id == DocumentSentiment.document_id)
+    top_sentiment = get_top_sentiment_helper(long, sentiment, short)
+
+    return jsonify(top_sentiment)
+
+
+@cache.memoize(timeout=60)
+def get_top_sentiment_helper(long, sentiment, short):
+    counts_subquery = (
+        db.session.query(
+            Ticker.symbol.label("symbol"),
+            func.count(Ticker.symbol).label("symbol_count"),
+            DocumentSentiment.sentiment["strongest_emotion"].astext.label("emotion"),
+            func.row_number()
+            .over(
+                partition_by=DocumentSentiment.sentiment["strongest_emotion"].astext,
+                order_by=desc(func.count(Ticker.symbol)),
+            )
+            .label("row_number"),
+        )
+        .join(TickerMention)
+        .join(Document)
+        .join(DocumentSentiment)
         .filter(DocumentSentiment.model_version == MODEL_FILE)
-        .group_by(Ticker.symbol)
+        .filter(DocumentSentiment.sentiment["strongest_emotion"].astext.is_not(None))
+        .group_by(Ticker.symbol, DocumentSentiment.sentiment["strongest_emotion"].astext)
         .order_by(desc(func.count(Ticker.symbol)))
     )
-
-    long_counts_query = counts_query.filter(Document.posted_at > datetime.now() - timedelta(days=long))
-    short_counts_query = counts_query.filter(Document.posted_at > datetime.now() - timedelta(days=short))
-
+    lcsq = counts_subquery.filter(Document.posted_at > datetime.now() - timedelta(days=long))
+    scsq = counts_subquery.filter(Document.posted_at > datetime.now() - timedelta(days=short))
     if sentiment != "all":
-        long_counts_query = long_counts_query.filter(
-            DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment
-        )
-        short_counts_query = short_counts_query.filter(
-            DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment
-        )
+        lcsq = lcsq.filter(DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment)
+        scsq = scsq.filter(DocumentSentiment.sentiment["strongest_emotion"].astext == sentiment)
+    lcsq = lcsq.subquery()
+    scsq = scsq.subquery()
 
-    short_counts_query = short_counts_query.limit(10)
+    short_counts_query = (
+        db.session.query(scsq.c.emotion, scsq.c.symbol_count, scsq.c.symbol)
+        .filter(scsq.c.row_number <= 10)
+        .order_by(scsq.c.emotion.desc(), scsq.c.symbol_count.desc())
+    )
 
-    document_long_counts = long_counts_query.all()
+    long_counts_query = db.session.query(lcsq.c.emotion, lcsq.c.symbol_count, lcsq.c.symbol).order_by(
+        desc(lcsq.c.symbol_count)
+    )
+
     document_short_counts = short_counts_query.all()
-    ticker_dict_long = {ticker: count for (ticker, count) in document_long_counts}
+    document_long_counts = long_counts_query.all()
 
-    for tick, count in document_short_counts:
-        to_return.append(
+    ticker_dict_long = _top_ticker_to_dict(document_long_counts)
+
+    res_dict = {emotion: [] for (emotion) in c.SENTIMENTS} if sentiment == "all" else {sentiment: []}
+    for emotion, count, tick in document_short_counts:
+        res_dict[emotion].append(
             {
                 "ticker": tick,
-                "long_count": ticker_dict_long[tick],
+                "long_count": ticker_dict_long[emotion][tick],
                 "short_count": count,
             }
         )
+    return res_dict
 
-    return jsonify(to_return)
+
+def _top_ticker_to_dict(query_result):
+    res_dict = {emotion: {} for (emotion) in c.SENTIMENTS}
+    for emotion, count, ticker in query_result:
+        if ticker:
+            res_dict[emotion][ticker] = count
+    return res_dict
 
 
 @main.route("/getWords", methods=["POST"])
+@cache.cached(timeout=300)
 def get_words():
     request_object = request.get_json()
     days = request_object["days"]
@@ -363,11 +401,14 @@ def get_table_data():
     request_object = request.get_json()
     requested_tickers = request_object["tickers"]
 
+    return get_table_data_helper(requested_tickers, ticker_dict)
+
+
+@cache.memoize(timeout=180)
+def get_table_data_helper(requested_tickers, ticker_dict):
     if not requested_tickers:
         return "Include valid tickers for request", 400
-
-    tickers = Ticker.query.filter(Ticker.symbol.in_(request_object["tickers"]))
-
+    tickers = Ticker.query.filter(Ticker.symbol.in_(requested_tickers))
     all_fill = np.zeros(30)
     joy_fill = np.zeros(30)
     fear_fill = np.zeros(30)
@@ -376,7 +417,6 @@ def get_table_data():
     confident_fill = np.zeros(30)
     tentative_fill = np.zeros(30)
     analytical_fill = np.zeros(30)
-
     # This is totally arbitrary for now.
     for ticker in tickers:
         all = get_sentiment_timeseries_helper(ticker.symbol, 29, "all", "day")
@@ -432,7 +472,7 @@ def get_table_data():
 
         ticker_dict[ticker.symbol] = [
             ticker.long_name,
-            ticker.classification["sector"],
+            ticker.classification["sector"] if "sector" in ticker.classification else None,
             nan_to(all_corr_p[0], 0),
             nan_to(all_corr_p[1], 1),
             nan_to(all_corr_v[0], 0),
@@ -466,11 +506,11 @@ def get_table_data():
             nan_to(analytical_corr_v[0], 0),
             nan_to(analytical_corr_v[1], 1),
         ]
-
     return jsonify(ticker_dict)
 
 
 @main.route("/getTickers", methods=["GET"])
+@cache.cached(timeout=86400)
 def get_tickers():
     tickers = (
         db.session.query(Ticker.symbol, Ticker.long_name)

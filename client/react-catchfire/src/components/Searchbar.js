@@ -14,7 +14,7 @@ const GetTickers = () => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    fetch("/getTickers").then((response) => {
+    fetch("/api/getTickers").then((response) => {
       response.json().then((data) => {
         const toSet = [];
         for (const ticker in data) {
