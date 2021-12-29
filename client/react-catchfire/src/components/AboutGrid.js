@@ -71,7 +71,7 @@ export const AboutGrid = () => {
             <Card
               header="Jonathan Earles"
               meta="Co-Founder / Back-End Guy"
-              description="By day a Senior Shitlord Codemonkey."
+              description="By day a Senior Software Engineer, and bug sleuth."
               extra={jearlsExtra}
             />
           </Card.Group>
